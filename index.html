@@ -113,6 +113,10 @@
   @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
   @media (prefers-reduced-motion: reduce){ .step.active-step .dot{ animation:none; } }
 
+  .return-box{ margin-top:22px; padding-top:18px; border-top:1px dashed var(--border); display:flex; flex-direction:column; gap:8px; }
+  .return-box .return-label{ font-size:12.5px; color:var(--ink-muted); font-weight:600; text-align:center; }
+  .return-head{ font-size:17px; margin:0 0 6px; }
+  .return-lead{ font-size:13px; color:var(--ink-muted); line-height:1.7; margin:0 0 6px; }
   .hint{ font-size:12px; color:var(--ink-muted); text-align:center; margin-top:14px; line-height:1.6; }
   .view{ display:none; } .view.active{ display:block; }
 </style>
@@ -166,6 +170,25 @@
       <button class="btn primary" id="f-submit" style="margin-top:20px;">受付する</button>
     </div>
     <div class="hint">入力内容は受付スタッフに送信されます。カードキーはスタッフがお渡しします。</div>
+    <div class="return-box">
+      <div class="return-label">お帰りの際は</div>
+      <button class="btn" id="return-open" type="button">カードキーを返却する</button>
+    </div>
+  </section>
+
+  <!-- 返却の呼び出し -->
+  <section class="view" id="view-return">
+    <div class="card">
+      <h2 class="return-head">カードキーの返却</h2>
+      <p class="return-lead">受付のときと同じ会社名・お名前で、スタッフを呼んでください。スタッフがカードキーを受け取りに来ます。</p>
+      <label for="r-company">会社名 *</label>
+      <input type="text" id="r-company" placeholder="例: 株式会社サンプル" autocomplete="organization">
+      <label for="r-name">お名前 *</label>
+      <input type="text" id="r-name" placeholder="例: 山田 太郎" autocomplete="name">
+      <div class="err" id="r-err"></div>
+      <button class="btn primary" id="r-submit" type="button" style="margin-top:20px;">スタッフを呼ぶ</button>
+      <button class="btn ghost" id="r-back" type="button" style="margin-top:6px;">受付画面に戻る</button>
+    </div>
   </section>
 
   <!-- 送信完了 -->
@@ -182,6 +205,7 @@
         </div>
         <h2 id="done-title">受付スタッフに伝わりました</h2>
         <p id="done-msg">このままお待ちください。まもなくスタッフが確認します。</p>
+        <button class="btn" id="done-return" type="button" style="margin-bottom:8px;">カードキーを返却する</button>
         <button class="btn" id="submit-another" type="button">別の来訪者として受付する</button>
       </div>
     </div>
@@ -197,6 +221,7 @@
   var STATUS_POLL_MAX_ATTEMPTS = 240; // 5秒×240 = 20分でポーリングを打ち切る
   var headcount = 1;
   var busy = false;
+  var doneMode = "reception"; // 完了画面が「受付」か「返却」か
   var statusPollTimer = null;
   var statusPollAttempts = 0;
 
@@ -305,8 +330,13 @@
     var step = $("#step-confirmed");
     step.classList.remove("active-step");
     step.classList.add("done-step");
-    $("#done-title").textContent = "スタッフが確認しました";
-    $("#done-msg").textContent = "受付カウンターにお越しください。カードキーをお渡しします。";
+    if(doneMode === "return"){
+      $("#done-title").textContent = "返却を受け付けました";
+      $("#done-msg").textContent = "ご来訪ありがとうございました。お気をつけてお帰りください。";
+    } else {
+      $("#done-title").textContent = "スタッフが確認しました";
+      $("#done-msg").textContent = "受付カウンターにお越しください。カードキーをお渡しします。";
+    }
   }
   function stopStatusPolling(){
     if(statusPollTimer){ clearInterval(statusPollTimer); statusPollTimer = null; }
@@ -401,6 +431,7 @@
     try{
       var addResult = await apiCall({ action: "addVisitorRequest", company: input.company, name: input.name, headcount: headcount });
       saveStored(input.company, input.saveCompany, input.name, input.saveName);
+      setDoneMode("reception");
       $("#done-title").textContent = "受付スタッフに伝わりました";
       $("#done-msg").textContent = input.company + " 様、" + input.name + " 様（" + headcount + "名）で受付スタッフに伝えました。このままお待ちください。";
       switchView("view-done");
@@ -421,6 +452,62 @@
 
   $("#c-minus").addEventListener("click", function(){ if(headcount > 1){ headcount--; updateCountLabel(); } });
   $("#c-plus").addEventListener("click", function(){ if(headcount < 50){ headcount++; updateCountLabel(); } });
+  // ---------- 返却の呼び出し ----------
+  function setDoneMode(mode){
+    doneMode = mode;
+    $("#done-return").style.display = (mode === "return") ? "none" : "";
+    $("#submit-another").textContent = (mode === "return") ? "受付画面に戻る" : "別の来訪者として受付する";
+  }
+  function openReturnView(){
+    stopStatusPolling();
+    // 受付時に保存した会社名・お名前（または入力途中の内容）を入れておく
+    var input = currentInput();
+    $("#r-company").value = input.company || "";
+    $("#r-name").value = input.name || "";
+    $("#r-err").classList.remove("show");
+    switchView("view-return");
+  }
+  async function submitReturn(){
+    if(busy) return;
+    var errEl = $("#r-err");
+    errEl.classList.remove("show");
+    var company = $("#r-company").value.trim();
+    var name = $("#r-name").value.trim();
+    if(!company || !name){
+      errEl.textContent = "会社名とお名前を入力してください";
+      errEl.classList.add("show");
+      return;
+    }
+    busy = true;
+    prepareAudio();
+    var btn = $("#r-submit");
+    btn.disabled = true;
+    btn.textContent = "呼び出し中…";
+    try{
+      var res = await apiCall({ action: "addReturnRequest", company: company, name: name });
+      setDoneMode("return");
+      $("#done-title").textContent = "スタッフを呼びました";
+      $("#done-msg").textContent = company + " 様、" + name + " 様。このままお待ちください。スタッフがカードキーを受け取りに来ます。";
+      switchView("view-done");
+      playDoorbell();
+      vibrate();
+      if(res && res.id){ startStatusPolling(res.id); }
+    }catch(e){
+      var detail = (e && e.message) ? String(e.message) : "";
+      errEl.textContent = "呼び出しに失敗しました。電波状況をご確認のうえ、もう一度お試しください"
+        + (detail ? "（エラー内容: " + detail + "）" : "");
+      errEl.classList.add("show");
+    }finally{
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = "スタッフを呼ぶ";
+    }
+  }
+  $("#return-open").addEventListener("click", openReturnView);
+  $("#done-return").addEventListener("click", openReturnView);
+  $("#r-submit").addEventListener("click", submitReturn);
+  $("#r-back").addEventListener("click", function(){ switchView("view-form"); });
+
   $("#f-submit").addEventListener("click", submit);
 
   $("#company-change").addEventListener("click", function(){
