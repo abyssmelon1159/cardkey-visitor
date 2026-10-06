@@ -60,12 +60,7 @@
   #staff-login .login-card{ width:100%; max-width:360px; }
   #staff-login .login-title{ font-size:20px; font-weight:700; margin:0 0 4px; }
   #staff-login .login-sub{ font-size:12.5px; color:var(--ink-muted); margin:0 0 16px; }
-  #staff-login .login-switch{ margin-top:14px; text-align:center; font-size:12.5px; }
-  #staff-login .login-switch a{ color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer; }
-  #staff-login .login-switch a:hover{ text-decoration:underline; }
-  #staff-login .login-divider{ margin-top:18px; padding-top:14px; border-top:1px solid var(--border); }
 
-  .reception-grid{ display:block; }
 
   header.top{
     position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
@@ -104,16 +99,7 @@
   input:focus, textarea:focus{ border-color:var(--accent); }
   .row{ display:flex; gap:10px; } .row > *{ flex:1; }
 
-  .match-note{ font-size:12.5px; margin-top:8px; padding:8px 10px; border-radius:8px; display:flex; align-items:center; gap:6px; }
-  .match-note.ok{ background:var(--good-soft); color:var(--good); }
-  .match-note.new{ background:var(--warn-soft); color:var(--warn); }
 
-  .stepper{ display:flex; align-items:center; gap:10px; }
-  .stepper button{
-    width:40px; height:40px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2);
-    font-size:18px; color:var(--ink); flex:none; font-family:inherit; cursor:pointer;
-  }
-  .stepper .val{ flex:1; text-align:center; font-family:"IBM Plex Mono",monospace; font-size:20px; font-weight:700; }
 
   .key-count-hint{ font-size:12.5px; color:var(--ink-muted); margin-top:8px; }
   .key-count-hint.bad{ color:var(--danger); }
@@ -145,9 +131,6 @@
   .search svg{ flex:none; opacity:.55; }
 
   .toolbar{ display:flex; gap:8px; margin-bottom:12px; }
-  .segmented{ display:flex; background:var(--surface-2); border-radius:10px; padding:3px; margin-bottom:12px; }
-  .segmented button{ flex:1; border:none; background:none; padding:8px 6px; border-radius:8px; font-size:13px; font-weight:600; color:var(--ink-muted); font-family:inherit; }
-  .segmented button.on{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
 
   .loan-row{ display:flex; align-items:flex-start; gap:12px; }
   .loan-ava{ flex:none; width:36px; height:36px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
@@ -255,8 +238,6 @@
     header.top{ padding:16px 28px 0; border-bottom:none; }
     header.top::after{ content:""; display:block; height:1px; background:var(--border); margin-top:12px; }
     main{ padding:20px 28px 32px; }
-    .reception-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:16px; align-items:start; }
-    .reception-left .card:last-child{ margin-bottom:0; }
   }
 </style>
 </head>
@@ -471,7 +452,6 @@
   var requests = [];  
   var staffList = []; 
   var loggedInStaff = null; 
-  var sessionLoginId = ""; 
   var totalKeys = 20;
   var apiReady = false;
   var settingsDocReady = false;
@@ -495,7 +475,6 @@
     var t = $("#toast"); t.textContent = msg; t.classList.add("show");
     clearTimeout(toast._h); toast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
   }
-  function nowIso(){ return new Date().toISOString(); }
   function todayKey(){ var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
   function fmtRelative(iso){
     if(!iso) return "";
@@ -510,10 +489,6 @@
     if(!iso) return "";
     var d = new Date(iso);
     return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  }
-  function uid(){
-    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
-    return "g"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   }
   function norm(s){ return String(s||"").trim().toLowerCase(); }
 
@@ -706,8 +681,7 @@
     btn.disabled = true;
     try{
       var loginResult = await gsRun("apiStaffLogin", loginId, cNumber);
-      loggedInStaff = { id: (loginResult && loginResult.id) || "", cNumber: cNumber, name: (loginResult && loginResult.name) || "", isOwner: !!(loginResult && loginResult.isOwner) };
-      sessionLoginId = loginId;
+      loggedInStaff = { id: (loginResult && loginResult.id) || "", name: (loginResult && loginResult.name) || "", isOwner: !!(loginResult && loginResult.isOwner) };
       $("#staff-add-btn").style.display = loggedInStaff.isOwner ? "" : "none";
       $("#staff-login").style.display = "none";
       $(".app").classList.add("show");
@@ -989,8 +963,6 @@
 
     var keys = selectedKeys.slice();
     var requestIdForCheckout = currentRequestId;
-    var staffCNumber = selectedStaff.cNumber || "";
-    var staffName = selectedStaff.name || "";
     
     
     var btn = $("#co-confirm");
@@ -998,7 +970,7 @@
     btn.disabled = true;
     btn.textContent = "貸し出し処理中…";
     try{
-      var result = await gsRun("apiCheckout", company, name, keys, requestIdForCheckout, staffCNumber, staffName, selectedStaff.id);
+      var result = await gsRun("apiCheckout", company, name, keys, requestIdForCheckout, selectedStaff.id);
       applyState(result.state);
       var keysForDisplay = keys.slice().sort(function(a,b){ return a-b; });
       toast(company+" 様に No."+keysForDisplay.join("・")+" を貸し出しました");
@@ -1225,7 +1197,7 @@
 
   async function loadStaffList(){
     try{
-      staffList = await gsRun("apiListStaff", loggedInStaff ? loggedInStaff.cNumber : "", sessionLoginId);
+      staffList = await gsRun("apiListStaff");
       renderStaffList();
     }catch(e){   }
   }
@@ -1244,22 +1216,17 @@
   async function saveStaffForm(){
     var cNumber = $("#st-cnumber").value.trim();
     var name = $("#st-name").value.trim();
-    var password = ""; 
     var errEl = $("#st-err");
     if(!cNumber || !name){ errEl.textContent = "C番号とお名前を入力してください"; errEl.classList.add("show"); return; }
     if(!apiReady){ toast("サーバーに接続されていません"); return; }
     try{
       if(editingStaffId){
         var self = staffList.find(function(x){ return loggedInStaff && x.id === loggedInStaff.id; });
-        await gsRun("apiUpdateStaff", editingStaffId, cNumber, password, name, loggedInStaff.cNumber, sessionLoginId);
-        
-        if(self && self.id === editingStaffId){
-          loggedInStaff.cNumber = cNumber;
-          loggedInStaff.name = name;
-        }
+        await gsRun("apiUpdateStaff", editingStaffId, cNumber, name);
+        if(self && self.id === editingStaffId) loggedInStaff.name = name;
         toast("スタッフ情報を更新しました");
       } else {
-        await gsRun("apiAddStaff", cNumber, password, name, loggedInStaff.cNumber, sessionLoginId);
+        await gsRun("apiAddStaff", cNumber, name);
         toast("スタッフを登録しました");
       }
       await loadStaffList();
@@ -1276,7 +1243,7 @@
   async function deleteStaff(){
     if(!editingStaffId) return;
     try{
-      await gsRun("apiDeleteStaff", editingStaffId, loggedInStaff.cNumber, sessionLoginId);
+      await gsRun("apiDeleteStaff", editingStaffId);
       await loadStaffList();
       toast("削除しました");
       closeSheet("#sheet-staff");
