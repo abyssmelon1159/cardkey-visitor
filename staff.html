@@ -140,8 +140,8 @@
   .btn:disabled{ opacity:.4; cursor:not-allowed; }
   .btn.sm{ padding:8px 12px; font-size:13px; border-radius:8px; min-height:36px; }
 
-  .search{ display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 10px; }
-  .search input{ border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:9px 0; width:100%; font-family:inherit; }
+  .search{ flex:1; min-width:0; display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 10px; }
+  .search input{ border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:9px 0; width:100%; min-width:0; font-family:inherit; }
   .search svg{ flex:none; opacity:.55; }
 
   .toolbar{ display:flex; gap:8px; margin-bottom:12px; }
@@ -326,7 +326,7 @@
       <div class="toolbar">
         <div class="search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <input type="text" id="history-search" placeholder="会社名・名前・担当者">
+          <input type="text" id="history-search" placeholder="会社名・名前・担当者で検索">
         </div>
       </div>
       <div id="history-list"></div>
