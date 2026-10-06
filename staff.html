@@ -783,7 +783,7 @@
               '</div>' +
             '</div>' +
             '<div class="request-actions">' +
-              '<button class="btn sm primary" data-handle-return="'+r.id+'">返却を受け付ける</button>' +
+              '<button class="btn sm primary" data-handle-return="'+r.id+'">'+(matched.length ? matched.length+'枚を返却する' : '返却を受け付ける')+'</button>' +
               '<button class="btn sm ghost" data-dismiss-request="'+r.id+'" title="対応済みにする">✕</button>' +
             '</div>' +
           '</div>'
@@ -817,15 +817,29 @@
 
   
   
-  function handleReturnRequest(id){
+  var returningRequestIds = {};
+  async function handleReturnRequest(id){
     var r = requests.find(function(x){ return x.id === id; });
-    if(!r) return;
+    if(!r || returningRequestIds[id]) return;
     var matched = loansForVisitor(r.company, r.name);
     if(matched.length === 0){
       toast("この来訪者の貸出中のカードキーが見つかりません。「貸出中」タブから返却してください");
       return;
     }
-    openReturnSheet(matched, r.company + " / " + r.name + " 様（返却の呼び出し）", id);
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+    // ボタンを1回押すだけで、この来訪者の貸出中カードキーをすべて返却し、呼び出しも対応済みにする
+    returningRequestIds[id] = true;
+    try{
+      var result = await gsRun("apiReturn", matched.map(function(l){ return l.id; }));
+      applyState(result.state);
+      try{ applyState(await gsRun("apiResolveRequest", id)); }catch(e2){}
+      toast(r.name + " 様のカードキー " + matched.length + "枚を返却しました");
+      renderAll();
+    }catch(e){
+      toast("返却の記録に失敗しました。もう一度お試しください");
+    }finally{
+      delete returningRequestIds[id];
+    }
   }
 
   function handleRequest(id){
