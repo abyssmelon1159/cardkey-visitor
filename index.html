@@ -13,6 +13,7 @@
     --bg:#eef2ee; --surface:#ffffff; --surface-2:#e3e9e2; --border:#ccd5cb;
     --ink:#16211c; --ink-muted:#54635b;
     --accent:#0f6b5c; --accent-ink:#ffffff; --accent-soft:#dcefea;
+    --grad:linear-gradient(135deg,#1c7a4a 0%,#0f7f72 50%,#2565a0 100%); --grad-soft:linear-gradient(135deg,#dcefe4 0%,#d8eeec 50%,#dde9f5 100%);
     --danger:#a8362c; --danger-soft:#f8e2df;
     --good:#1b7a4b; --good-soft:#e1f2e7;
     --shadow: 0 1px 2px rgba(20,30,25,.06), 0 6px 20px rgba(20,30,25,.06);
@@ -23,6 +24,7 @@
       --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
       --ink:#eaf1ec; --ink-muted:#9fb0a7;
       --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
+    --grad:linear-gradient(135deg,#6fe0a4 0%,#57ddc0 50%,#7fb8f2 100%); --grad-soft:linear-gradient(135deg,#173733 0%,#163538 50%,#1a3042 100%);
       --danger:#f4867e; --danger-soft:#3a1613;
       --good:#77dd9f; --good-soft:#123321;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
@@ -33,6 +35,7 @@
     --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
     --ink:#eaf1ec; --ink-muted:#9fb0a7;
     --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
+    --grad:linear-gradient(135deg,#6fe0a4 0%,#57ddc0 50%,#7fb8f2 100%); --grad-soft:linear-gradient(135deg,#173733 0%,#163538 50%,#1a3042 100%);
     --danger:#f4867e; --danger-soft:#3a1613;
     --good:#77dd9f; --good-soft:#123321;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
@@ -46,9 +49,11 @@
     padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
   }
   .mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  /* ほんのりグラデーション：画面上端の細いライン */
+  body::before{ content:""; position:fixed; top:0; left:0; right:0; height:3px; background:var(--grad); z-index:200; pointer-events:none; }
   .wrap{ max-width:440px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; padding:24px 18px 32px; }
   header{ text-align:center; margin-bottom:18px; }
-  header .mark{ font-size:19px; font-weight:700; letter-spacing:.02em; }
+  header .mark{ font-size:19px; font-weight:700; letter-spacing:.02em; color:var(--accent); background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   header .sub{ font-size:12.5px; color:var(--ink-muted); margin-top:4px; }
 
   .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:var(--shadow); }
@@ -89,7 +94,7 @@
     border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:13px 16px;
     font-size:15.5px; font-weight:700; width:100%;
   }
-  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.primary{ background:var(--grad); border-color:transparent; color:var(--accent-ink); }
   .btn.ghost{ background:transparent; border-color:transparent; color:var(--accent); font-weight:600; font-size:13.5px; padding:8px; }
   .btn.ghost.small{ width:auto; padding:7px 11px; font-size:12.5px; flex:none; }
   .btn:disabled{ opacity:.45; cursor:not-allowed; }
@@ -100,6 +105,7 @@
   .done{ text-align:center; padding:20px 6px; }
   .done .icon{ width:56px; height:56px; border-radius:999px; background:var(--good-soft); color:var(--good); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; transition:background .25s,color .25s; }
   .done .icon.pending{ background:var(--surface-2); color:var(--ink-muted); }
+  .done .icon.celebrate{ background:var(--grad); color:var(--accent-ink); }
   .done h2{ font-size:19px; margin:0 0 8px; }
   .keep-open{ background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:13px !important; color:var(--ink) !important; line-height:1.7; text-align:left; }
   .done p{ font-size:14px; color:var(--ink-muted); line-height:1.7; margin:0 0 20px; }
