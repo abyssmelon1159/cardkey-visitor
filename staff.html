@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>カードキー台帳</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM&#43;Plex&#43;Sans&#43;JP:wght@400;500;600;700&amp;family=IBM&#43;Plex&#43;Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#eef2ee; --surface:#ffffff; --surface-2:#e3e9e2; --border:#ccd5cb;
+    --ink:#16211c; --ink-muted:#54635b;
+    --accent:#0f6b5c; --accent-ink:#ffffff; --accent-soft:#dcefea;
+    --warn:#8a5a10; --warn-soft:#f8ecd9;
+    --danger:#a8362c; --danger-soft:#f8e2df;
+    --good:#1b7a4b; --good-soft:#e1f2e7;
+    --shadow: 0 1px 2px rgba(20,30,25,.06), 0 6px 20px rgba(20,30,25,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
+      --ink:#eaf1ec; --ink-muted:#9fb0a7;
+      --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
+      --warn:#f0b15a; --warn-soft:#3a2a12;
+      --danger:#f4867e; --danger-soft:#3a1613;
+      --good:#77dd9f; --good-soft:#123321;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
+    --ink:#eaf1ec; --ink-muted:#9fb0a7;
+    --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
+    --warn:#f0b15a; --warn-soft:#3a2a12;
+    --danger:#f4867e; --danger-soft:#3a1613;
+    --good:#77dd9f; --good-soft:#123321;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; padding-left:72px;
+  }
+  .mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+
+  .app{ max-width:640px; margin:0 auto; min-height:100%; display:none; flex-direction:column; }
+  .app.show{ display:flex; }
+
+  #staff-login{
+    position:fixed; inset:0; z-index:100; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  #staff-login .login-card{ width:100%; max-width:360px; }
+  #staff-login .login-title{ font-size:20px; font-weight:700; margin:0 0 4px; }
+  #staff-login .login-sub{ font-size:12.5px; color:var(--ink-muted); margin:0 0 16px; }
+  #staff-login .login-switch{ margin-top:14px; text-align:center; font-size:12.5px; }
+  #staff-login .login-switch a{ color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer; }
+  #staff-login .login-switch a:hover{ text-decoration:underline; }
+  #staff-login .login-divider{ margin-top:18px; padding-top:14px; border-top:1px solid var(--border); }
+
+  .reception-grid{ display:block; }
+
+  header.top{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+    background:var(--bg); border-bottom:1px solid var(--border); padding:14px 16px 10px;
+  }
+  .brand{ display:flex; align-items:baseline; gap:8px; }
+  .brand .mark{ font-size:20px; font-weight:700; letter-spacing:.02em; }
+  .brand .sub{ font-size:12px; color:var(--ink-muted); }
+  .stats{ display:flex; gap:10px; margin-top:10px; }
+  .stat{ flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; }
+  .stat .n{ font-family:"IBM Plex Mono",monospace; font-size:18px; font-weight:600; }
+  .stat .l{ font-size:11px; color:var(--ink-muted); }
+  .stat.warn .n{ color:var(--warn); }
+
+  main{ flex:1; padding:14px 16px 28px; }
+  .view{ display:none; } .view.active{ display:block; }
+
+  h3.step-title{ font-size:12.5px; font-weight:700; color:var(--ink-muted); margin:0 0 8px; text-transform:uppercase; letter-spacing:.04em; }
+  h3.step-title.with-action{ display:flex; align-items:center; justify-content:space-between; gap:8px; text-transform:none; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:var(--shadow); }
+
+  #bell-toggle{ font-size:15px; line-height:1; flex:none; }
+  #bell-toggle.off{ opacity:.4; }
+  @keyframes request-flash{ 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 0 3px var(--accent-soft), var(--shadow); } }
+  .request-count-badge.return{ background:var(--danger-soft, #f8e2df); color:var(--danger, #a8362c); }
+  #request-queue-card.flash{ animation:request-flash .9s ease-in-out 2; }
+  @media (prefers-reduced-motion: reduce){ #request-queue-card.flash{ animation:none; } }
+
+  label{ display:block; font-size:12.5px; color:var(--ink-muted); margin:12px 0 6px; font-weight:600; }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], input[type=password], input[type=number], input[type=date], textarea, select{
+    width:100%; border:1px solid var(--border); background:var(--surface); color:var(--ink);
+    border-radius:10px; padding:10px 12px; font-size:14.5px; font-family:inherit; outline:none;
+  }
+  input:focus, textarea:focus{ border-color:var(--accent); }
+  .row{ display:flex; gap:10px; } .row > *{ flex:1; }
+
+  .match-note{ font-size:12.5px; margin-top:8px; padding:8px 10px; border-radius:8px; display:flex; align-items:center; gap:6px; }
+  .match-note.ok{ background:var(--good-soft); color:var(--good); }
+  .match-note.new{ background:var(--warn-soft); color:var(--warn); }
+
+  .stepper{ display:flex; align-items:center; gap:10px; }
+  .stepper button{
+    width:40px; height:40px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2);
+    font-size:18px; color:var(--ink); flex:none; font-family:inherit; cursor:pointer;
+  }
+  .stepper .val{ flex:1; text-align:center; font-family:"IBM Plex Mono",monospace; font-size:20px; font-weight:700; }
+
+  .key-count-hint{ font-size:12.5px; color:var(--ink-muted); margin-top:8px; }
+  .key-count-hint.bad{ color:var(--danger); }
+  .key-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(46px,1fr)); gap:8px; margin-top:10px; }
+  .key-tile{
+    aspect-ratio:1; border-radius:9px; border:1.5px solid var(--border); background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono",monospace;
+    font-size:13px; font-weight:700; color:var(--ink-muted); cursor:pointer; user-select:none;
+  }
+  .key-tile.sel{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .key-tile.occupied{ background:var(--danger-soft); border:1.5px solid var(--danger); color:var(--danger); cursor:default; font-weight:700; }
+  .key-tile.occupied.board{ cursor:pointer; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:10px 14px;
+    font-size:14px; font-weight:600;
+  }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.danger{ background:transparent; border-color:var(--danger); color:var(--danger); }
+  .btn.ghost{ background:transparent; border-color:transparent; padding:8px 10px; }
+  .btn.block{ width:100%; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn.sm{ padding:7px 10px; font-size:12.5px; border-radius:8px; }
+
+  .search{ display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 10px; }
+  .search input{ border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:9px 0; width:100%; font-family:inherit; }
+  .search svg{ flex:none; opacity:.55; }
+
+  .toolbar{ display:flex; gap:8px; margin-bottom:12px; }
+  .segmented{ display:flex; background:var(--surface-2); border-radius:10px; padding:3px; margin-bottom:12px; }
+  .segmented button{ flex:1; border:none; background:none; padding:8px 6px; border-radius:8px; font-size:13px; font-weight:600; color:var(--ink-muted); font-family:inherit; }
+  .segmented button.on{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
+
+  .loan-row{ display:flex; align-items:flex-start; gap:12px; }
+  .loan-ava{ flex:none; width:36px; height:36px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+  .loan-main{ flex:1; min-width:0; }
+  .loan-item{ font-weight:600; font-size:14px; }
+  .loan-sub{ font-size:12px; color:var(--ink-muted); margin-top:2px; }
+  .keynum-badge{ font-family:"IBM Plex Mono",monospace; background:var(--surface-2); border-radius:6px; padding:1px 6px; font-size:11.5px; margin-right:4px; }
+
+  .empty{ text-align:center; padding:48px 20px; color:var(--ink-muted); }
+  .empty svg{ opacity:.5; margin-bottom:14px; }
+  .empty h3{ color:var(--ink); font-size:16px; margin:0 0 6px; }
+  .empty p{ font-size:13px; margin:0; line-height:1.6; }
+
+  .visitor-row{ display:flex; align-items:center; gap:10px; }
+  .visitor-main{ flex:1; min-width:0; }
+  .visitor-name{ font-weight:600; font-size:14px; }
+  .visitor-sub{ font-size:12px; color:var(--ink-muted); }
+
+  .request-card{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .request-card:last-child{ border-bottom:none; }
+  .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+  .request-main{ flex:1; min-width:0; }
+  .request-name{ font-weight:700; font-size:15px; }
+  .request-sub{ font-size:12px; color:var(--ink-muted); margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .request-count-badge{ display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:12.5px; padding:2px 10px; border-radius:999px; font-family:"IBM Plex Mono",monospace; white-space:nowrap; }
+  .request-actions{ display:flex; gap:6px; flex:none; }
+
+  .checkout-who{ display:flex; align-items:center; gap:12px; background:var(--surface-2); border-radius:12px; padding:12px 14px; margin-bottom:18px; }
+  .checkout-who-ava{ flex:none; width:44px; height:44px; border-radius:999px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
+  .checkout-who-main{ flex:1; min-width:0; }
+  .checkout-who-name{ font-weight:700; font-size:16px; }
+  .checkout-who-sub{ font-size:12.5px; color:var(--ink-muted); margin-top:2px; }
+  .checkout-grid-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px; }
+  .key-grid.lg{ grid-template-columns:repeat(auto-fill, minmax(56px,1fr)); gap:10px; margin-top:10px; }
+  .key-grid.lg .key-tile{ font-size:16px; border-radius:12px; transition:transform .08s ease, box-shadow .08s ease; }
+  .key-grid.lg .key-tile.sel{ box-shadow:0 2px 8px rgba(0,0,0,.18); transform:translateY(-1px); }
+  .key-count-hint.ok{ color:var(--good); font-weight:700; }
+
+  nav.tabs{
+    position:fixed; left:0; top:0; bottom:0; width:72px; z-index:20;
+    background:var(--surface); border-right:1px solid var(--border);
+    padding: calc(16px + env(safe-area-inset-top,0px)) 6px calc(16px + env(safe-area-inset-bottom,0px));
+    display:flex; justify-content:flex-start;
+  }
+  nav.tabs .inner{ width:100%; display:flex; flex-direction:column; gap:8px; }
+  .tab-btn{ flex:none; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-muted); font-size:10.5px; padding:10px 4px; border-radius:12px; font-family:inherit; }
+  .tab-btn.on{ color:var(--accent); background:var(--accent-soft); }
+  .tab-btn svg{ width:22px; height:22px; }
+
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(10,15,12,.45); z-index:40; display:flex; align-items:flex-end;
+    opacity:0; pointer-events:none; transition:opacity .18s ease;
+  }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    background:var(--surface); width:100%; max-width:640px; margin:0 auto; border-radius:18px 18px 0 0;
+    max-height:88vh; overflow-y:auto; padding:14px 18px calc(22px + env(safe-area-inset-bottom,0px));
+    transform:translateY(16px); transition:transform .18s ease;
+  }
+  .sheet-backdrop.open .sheet{ transform:translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background:var(--border); border-radius:99px; margin:2px auto 14px; }
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .sheet-head h2{ font-size:17px; margin:0; }
+  .hint{ font-size:12px; color:var(--ink-muted); margin-top:6px; }
+  .err{ font-size:12.5px; color:var(--danger); margin-top:8px; display:none; } .err.show{ display:block; }
+  .actions{ display:flex; gap:10px; margin-top:20px; }
+
+  .checkitem{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .checkitem:last-child{ border-bottom:none; }
+  .checkitem input{ width:18px; height:18px; }
+
+  .toast{
+    position:fixed; left:calc(50% + 36px); bottom:28px; transform:translateX(-50%);
+    background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:10px; font-size:13px;
+    z-index:60; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    max-width:90vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,-6px); }
+
+  a{ color:var(--accent); }
+
+   
+  @media (min-width: 860px){
+    body{ padding-left:88px; }
+    nav.tabs{ width:88px; }
+    .app{ max-width:1040px; }
+    main{ padding:20px 28px 32px; }
+    .reception-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:16px; align-items:start; }
+    .reception-left .card:last-child{ margin-bottom:0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="staff-login">
+  <div class="card login-card" id="login-view">
+    <div class="login-title">スタッフログイン</div>
+    <div class="login-sub">カードキー台帳を利用するにはログインしてください</div>
+    <label>ID *</label>
+    <input type="text" id="login-cnumber" placeholder="共通ID" autocomplete="off" autocapitalize="off" autofocus>
+    <label>パスワード（C番号） *</label>
+    <input type="password" id="login-password" placeholder="自分のC番号" autocomplete="off" inputmode="numeric">
+    <div class="err" id="login-err"></div>
+    <button class="btn primary block" id="login-submit" style="margin-top:16px;">ログイン</button>
+    <div class="login-sub" style="margin:14px 0 0; text-align:center;">アカウントがない場合は、登録済みのスタッフに「名簿設定」から追加してもらってください</div>
+  </div>
+
+</div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark">カードキー台帳</span>
+      <span class="sub">受付からの貸出をその場で記録</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n mono" id="stat-total">0</span><span class="l">総本数</span></div>
+      <div class="stat warn"><span class="n mono" id="stat-out">0</span><span class="l">貸出中</span></div>
+      <div class="stat"><span class="n mono" id="stat-today">0</span><span class="l">本日の貸出</span></div>
+    </div>
+  </header>
+
+  <main>
+    
+    <section class="view active" id="view-reception">
+      <div class="card" id="request-queue-card" style="display:none;">
+        <h3 class="step-title with-action">
+          <span>来訪受付フォームからの申し込み・返却 <span id="request-queue-count" class="mono"></span></span>
+          <button class="btn sm ghost" id="bell-toggle" type="button" aria-pressed="true" title="来訪通知音: ON（クリックでOFF）">🔔</button>
+        </h3>
+        <div id="request-queue"></div>
+      </div>
+
+      <div class="empty" id="request-queue-empty">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none"><path d="M4 5a1 1 0 0 1 1-1h2.2a1 1 0 0 1 1 .8l.7 3.2a1 1 0 0 1-.5 1.1l-1.6.9a12 12 0 0 0 5.2 5.2l.9-1.6a1 1 0 0 1 1.1-.5l3.2.7a1 1 0 0 1 .8 1V18a1 1 0 0 1-1 1h-1C10 19 5 14 5 6V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <h3>申し込みはありません</h3>
+        <p>来訪受付フォームから申し込みが入ると、ここに表示されます</p>
+      </div>
+    </section>
+
+    
+    <section class="view" id="view-board">
+      <div class="toolbar">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="board-search" placeholder="会社名・名前で検索">
+        </div>
+      </div>
+      <div id="board-grid-wrap">
+        <div class="key-grid" id="board-grid"></div>
+      </div>
+    </section>
+
+    
+    <section class="view" id="view-history">
+      <div class="toolbar">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="history-search" placeholder="会社名・名前・担当者で検索">
+        </div>
+      </div>
+      <div id="history-list"></div>
+    </section>
+
+    
+    <section class="view" id="view-settings">
+      <div class="card">
+        <h3 class="step-title">カードキーの総本数</h3>
+        <div class="row">
+          <input type="number" id="s-total" min="1" step="1">
+          <button class="btn primary" id="s-total-save" style="flex:none;">保存</button>
+        </div>
+        <div class="err" id="s-total-err"></div>
+      </div>
+
+      <div class="step-title" style="margin-top:22px;">訪問者名簿</div>
+      <div class="toolbar" style="margin-top:8px;">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="visitor-search" placeholder="会社名・名前で検索">
+        </div>
+        <button class="btn sm" id="visitor-add-btn" style="white-space:nowrap;">+ 新規登録</button>
+      </div>
+      <div id="visitor-list" style="margin-top:10px;"></div>
+
+      <div class="step-title" style="margin-top:22px;">スタッフアカウント</div>
+      <div class="toolbar" style="margin-top:8px;">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="staff-search" placeholder="C番号・名前で検索">
+        </div>
+        <button class="btn sm" id="staff-add-btn" style="white-space:nowrap; display:none;">+ 新規登録</button>
+      </div>
+      <div id="staff-list" style="margin-top:10px;"></div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <div class="inner">
+      <button class="tab-btn on" data-tab="reception">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 5a1 1 0 0 1 1-1h2.2a1 1 0 0 1 1 .8l.7 3.2a1 1 0 0 1-.5 1.1l-1.6.9a12 12 0 0 0 5.2 5.2l.9-1.6a1 1 0 0 1 1.1-.5l3.2.7a1 1 0 0 1 .8 1V18a1 1 0 0 1-1 1h-1C10 19 5 14 5 6V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        受付
+      </button>
+      <button class="tab-btn" data-tab="board">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 3v4M16 3v4M3 10h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        貸出中
+      </button>
+      <button class="tab-btn" data-tab="history">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        貸し出し履歴
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h11M4 12h16M4 18h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="18" r="2" stroke="currentColor" stroke-width="1.6"/></svg>
+        名簿設定
+      </button>
+    </div>
+  </nav>
+</div>
+
+
+<div class="sheet-backdrop" id="sheet-return">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>返却する</h2><button class="btn ghost" data-close>閉じる</button></div>
+    <div class="hint" id="ret-who" style="margin-bottom:10px;"></div>
+    <div id="ret-list"></div>
+    <div class="err" id="ret-err"></div>
+    <div class="actions"><button class="btn primary block" id="ret-confirm">選択したカードキーを返却</button></div>
+  </div>
+</div>
+
+
+<div class="sheet-backdrop" id="sheet-checkout">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>カードキーを選択</h2><button class="btn ghost" data-close>閉じる</button></div>
+    <div class="checkout-who">
+      <div class="checkout-who-ava" id="co-who-ava"></div>
+      <div class="checkout-who-main">
+        <div class="checkout-who-name" id="co-who-name"></div>
+        <div class="checkout-who-sub" id="co-who-sub"></div>
+      </div>
+    </div>
+    <label>対応スタッフ *</label>
+    <select id="co-staff">
+      <option value="">選択してください</option>
+    </select>
+    <div class="checkout-grid-head">
+      <h3 class="step-title" style="margin:0;">貸し出すカードキー</h3>
+      <div class="key-count-hint" id="co-key-hint">0 / 1 枚を選択</div>
+    </div>
+    <div class="key-grid lg" id="checkout-key-grid"></div>
+    <div class="err" id="co-err"></div>
+    <div class="actions"><button class="btn primary block" id="co-confirm">貸し出す</button></div>
+  </div>
+</div>
+
+
+<div class="sheet-backdrop" id="sheet-visitor">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2 id="v-form-title">訪問者を登録</h2><button class="btn ghost" data-close>閉じる</button></div>
+    <label>会社名 *</label>
+    <input type="text" id="v-company" placeholder="例: 株式会社サンプル">
+    <label>お名前 *</label>
+    <input type="text" id="v-name" placeholder="例: 山田 太郎">
+    <div class="err" id="v-err"></div>
+    <div class="actions">
+      <button class="btn danger" id="v-delete" style="display:none;">削除</button>
+      <button class="btn primary block" id="v-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="sheet-backdrop" id="sheet-staff">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2 id="st-form-title">スタッフを登録</h2><button class="btn ghost" data-close>閉じる</button></div>
+    <label>C番号 *</label>
+    <input type="text" id="st-cnumber" placeholder="例: 111111" inputmode="numeric">
+    <div class="hint">C番号は、このスタッフがログインするときのパスワードになります</div>
+    <label>お名前 *</label>
+    <input type="text" id="st-name" placeholder="例: 山田 太郎">
+    <div class="err" id="st-err"></div>
+    <div class="actions">
+      <button class="btn danger" id="st-delete" style="display:none;">削除</button>
+      <button class="btn primary block" id="st-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var visitors = [];  
+  var loans = [];     
+  var requests = [];  
+  var staffList = []; 
+  var loggedInStaff = null; 
+  var sessionLoginId = ""; 
+  var totalKeys = 20;
+  var apiReady = false;
+  var settingsDocReady = false;
+  var knownRequestIds = null; 
+  var bellEnabled = true;
+  try{ bellEnabled = localStorage.getItem("cardkey_bell_enabled") !== "0"; }catch(e){   }
+  var originalTitle = document.title;
+  var titleFlashTimer = null;
+  var POLL_MS = 6000;
+
+  var loansLoaded = false;
+
+  function $(sel){ return document.querySelector(sel); }
+  function $all(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function toast(msg){
+    var t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._h); toast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function todayKey(){ var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function fmtRelative(iso){
+    if(!iso) return "";
+    var mins = Math.floor((Date.now() - new Date(iso).getTime())/60000);
+    if(mins < 1) return "たった今";
+    if(mins < 60) return mins+"分前";
+    var hrs = Math.floor(mins/60);
+    if(hrs < 24) return hrs+"時間前";
+    return Math.floor(hrs/24)+"日前";
+  }
+  function fmtDateTime(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+  function uid(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "g"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  }
+  function norm(s){ return String(s||"").trim().toLowerCase(); }
+
+  function activeLoans(){ return loans.filter(function(l){ return l.status === "active"; }); }
+  function occupiedMap(){
+    var m = {};
+    activeLoans().forEach(function(l){ m[l.keyNumber] = l; });
+    return m;
+  }
+  function availableKeyNumbers(){
+    var occ = occupiedMap();
+    var out = [];
+    for(var i=1;i<=totalKeys;i++){ if(!occ[i]) out.push(i); }
+    return out;
+  }
+
+  
+  
+  
+  
+  
+  
+  var API_URL = "https://script.google.com/macros/s/AKfycbzPwu3PiCEc5j6BOZbBnmn3ERNM4FJGooYCXGgE4i9vMqRE5l2hTDZiUTDvLk513Xrzpg/exec";
+  var sessionToken = "";
+  var hasScriptRun = !!(window.google && window.google.script && window.google.script.run);
+
+  function callServer(fnName, args){
+    if(hasScriptRun){
+      return new Promise(function(resolve, reject){
+        var runner = google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(function(err){ reject(new Error(err && err.message ? err.message : String(err))); });
+        runner[fnName].apply(runner, args);
+      });
+    }
+    var body = (fnName === "apiLogin")
+      ? { action: "login", loginId: args[0], cNumber: args[1] }
+      : { action: "rpc", token: args[0], fn: args[1], args: args[2] };
+    return fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body),
+      redirect: "follow"
+    }).then(function(res){
+      if(!res.ok) throw new Error("http_" + res.status);
+      return res.json();
+    }).then(function(data){
+      if(!data || data.ok !== true) throw new Error((data && data.error) || "server_error");
+      return data.result;
+    });
+  }
+
+  function gsRun(fnName){
+    var args = Array.prototype.slice.call(arguments, 1);
+    if(fnName === "apiStaffLogin"){
+      return callServer("apiLogin", args).then(function(r){
+        sessionToken = (r && r.token) || "";
+        return r;
+      });
+    }
+    return callServer("apiRpc", [sessionToken, fnName, args]).catch(function(e){
+      if(e && e.message && e.message.indexOf("session_expired") > -1){
+        toast("ログインの有効期限が切れました。もう一度ログインしてください");
+        setTimeout(function(){ location.reload(); }, 1500);
+      }
+      throw e;
+    });
+  }
+  
+  
+  function parseServerError(e){
+    var msg = (e && e.message) || "";
+    var parts = msg.split(":");
+    return { code: parts[0], detail: parts[1] };
+  }
+
+  function applyState(state){
+    if(!state) return;
+    if(state.totalKeys){ totalKeys = state.totalKeys; }
+    visitors = state.visitors || [];
+    loans = (state.loans || []).slice().sort(function(a,b){ return new Date(b.borrowedAt||0) - new Date(a.borrowedAt||0); });
+    requests = (state.requests || []).slice().sort(function(a,b){ return new Date(a.createdAt||0) - new Date(b.createdAt||0); });
+    settingsDocReady = true;
+    loansLoaded = true;
+    checkNewRequestsForBell();
+    
+    if(currentRequestId && !requests.some(function(r){ return r.id === currentRequestId; })){
+      closeCheckoutSheet();
+    }
+  }
+
+  
+  
+  
+  
+  
+  function checkNewRequestsForBell(){
+    var currentIds = {};
+    requests.forEach(function(r){ currentIds[r.id] = true; });
+    if(knownRequestIds){
+      var newOnes = requests.filter(function(r){ return !knownRequestIds[r.id]; });
+      var hasReturn = newOnes.some(function(r){ return r.status === "return_waiting"; });
+      var hasReception = newOnes.some(function(r){ return r.status !== "return_waiting"; });
+      if(newOnes.length){
+        
+        if(hasReception) playBellChime("reception");
+        if(hasReturn){
+          if(hasReception){ setTimeout(function(){ playBellChime("return"); }, 1200); }
+          else { playBellChime("return"); }
+        }
+        flashRequestQueueCard();
+        if(document.hidden) startTitleFlash(hasReturn && !hasReception ? "🔑 返却の呼び出しあり" : "🔔 新しい来訪者あり");
+      }
+    }
+    knownRequestIds = currentIds;
+  }
+
+  var audioCtx = null;
+  function playBellChime(kind){
+    if(!bellEnabled) return;
+    try{
+      if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      if(audioCtx.state === "suspended"){ audioCtx.resume(); }
+      var now = audioCtx.currentTime;
+      
+      var notes = (kind === "return")
+        ? [[1568,0],[1318.5,.12],[1046.5,.24],[1568,.6],[1318.5,.72],[1046.5,.84]]
+        : [[880,0],[1318.5,.14]];
+      notes.forEach(function(pair){
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = pair[0];
+        gain.gain.setValueAtTime(0, now + pair[1]);
+        gain.gain.linearRampToValueAtTime(.22, now + pair[1] + .02);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + pair[1] + .9);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + pair[1]); osc.stop(now + pair[1] + .95);
+      });
+    }catch(e){   }
+  }
+
+  function flashRequestQueueCard(){
+    var card = $("#request-queue-card");
+    if(!card) return;
+    card.classList.remove("flash");
+    void card.offsetWidth; 
+    card.classList.add("flash");
+  }
+
+  function startTitleFlash(text){
+    if(titleFlashTimer) return;
+    var flip = false;
+    var label = text || "🔔 新しい来訪者あり";
+    titleFlashTimer = setInterval(function(){
+      document.title = flip ? originalTitle : label;
+      flip = !flip;
+    }, 1200);
+  }
+  function stopTitleFlash(){
+    if(titleFlashTimer){ clearInterval(titleFlashTimer); titleFlashTimer = null; }
+    document.title = originalTitle;
+  }
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden) stopTitleFlash();
+  });
+
+  function setBellEnabled(v){
+    bellEnabled = v;
+    try{ localStorage.setItem("cardkey_bell_enabled", v ? "1" : "0"); }catch(e){   }
+    updateBellToggleUI();
+    if(v) playBellChime(); 
+  }
+  function updateBellToggleUI(){
+    var btn = $("#bell-toggle");
+    if(!btn) return;
+    btn.classList.toggle("off", !bellEnabled);
+    btn.setAttribute("aria-pressed", bellEnabled ? "true" : "false");
+    btn.title = bellEnabled ? "来訪通知音: ON（クリックでOFF）" : "来訪通知音: OFF（クリックでON）";
+  }
+
+  
+  async function attemptStaffLogin(){
+    var errEl = $("#login-err");
+    errEl.classList.remove("show");
+    var loginId = $("#login-cnumber").value.trim();
+    var cNumber = $("#login-password").value.trim();
+    if(!loginId || !cNumber){ errEl.textContent = "IDとパスワード（C番号）を入力してください"; errEl.classList.add("show"); return; }
+    var btn = $("#login-submit");
+    btn.disabled = true;
+    try{
+      var loginResult = await gsRun("apiStaffLogin", loginId, cNumber);
+      loggedInStaff = { id: (loginResult && loginResult.id) || "", cNumber: cNumber, name: (loginResult && loginResult.name) || "", isOwner: !!(loginResult && loginResult.isOwner) };
+      sessionLoginId = loginId;
+      $("#staff-add-btn").style.display = loggedInStaff.isOwner ? "" : "none";
+      $("#staff-login").style.display = "none";
+      $(".app").classList.add("show");
+      loadStaffList();
+      renderReceptionKeyGrid();
+      initCapabilities();
+    }catch(e){
+      errEl.textContent = "IDまたはパスワード（C番号）が正しくありません";
+      errEl.classList.add("show");
+      $("#login-password").value = "";
+      $("#login-password").focus();
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  async function initCapabilities(){
+    try{
+      var state = await gsRun("apiGetState");
+      applyState(state);
+      apiReady = true;
+      renderAll();
+    }catch(e){
+      toast("サーバーに接続できませんでした。ページを再読み込みしてください。");
+      renderAll();
+    }
+    setInterval(pollState, POLL_MS);
+  }
+
+  async function pollState(){
+    try{
+      var state = await gsRun("apiGetState");
+      applyState(state);
+      apiReady = true;
+      renderAll();
+    }catch(e){   }
+  }
+
+  function renderAll(){
+    renderStats();
+    renderReceptionKeyGrid();
+    renderRequestQueue();
+    renderBoard();
+    renderHistory();
+    renderVisitorList();
+    if(!$("#s-total").matches(":focus")) $("#s-total").value = totalKeys;
+  }
+
+  function renderStats(){
+    $("#stat-total").textContent = totalKeys;
+    $("#stat-out").textContent = activeLoans().length;
+    var tk = todayKey();
+    $("#stat-today").textContent = loans.filter(function(l){
+      if(!l.borrowedAt) return false;
+      var d = new Date(l.borrowedAt);
+      return (d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()) === tk;
+    }).length;
+  }
+
+  
+  var headcount = 1;
+  var selectedKeys = [];
+  var currentRequestId = null; 
+  var currentCompany = ""; 
+  var currentName = "";    
+
+  function renderRequestQueue(){
+    var card = $("#request-queue-card");
+    var box = $("#request-queue");
+    var countEl = $("#request-queue-count");
+    var emptyEl = $("#request-queue-empty");
+    if(requests.length === 0){
+      card.style.display = "none";
+      box.innerHTML = "";
+      countEl.textContent = "";
+      emptyEl.style.display = "";
+      return;
+    }
+    card.style.display = "";
+    emptyEl.style.display = "none";
+    countEl.textContent = requests.length + "件";
+    box.innerHTML = requests.map(function(r){
+      var initial = esc((r.name || r.company || "?").charAt(0).toUpperCase());
+      if(r.status === "return_waiting"){
+        var matched = loansForVisitor(r.company, r.name);
+        return (
+          '<div class="request-card">' +
+            '<div class="request-ava">'+initial+'</div>' +
+            '<div class="request-main">' +
+              '<div class="request-name">'+esc(r.company)+' / '+esc(r.name)+'</div>' +
+              '<div class="request-sub">' +
+                '<span class="request-count-badge return">返却</span>' +
+                '<span>'+(matched.length ? '貸出中 '+matched.length+'枚・' : '')+fmtRelative(r.createdAt)+'に呼び出し</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="request-actions">' +
+              '<button class="btn sm primary" data-handle-return="'+r.id+'">返却を受け付ける</button>' +
+              '<button class="btn sm ghost" data-dismiss-request="'+r.id+'" title="対応済みにする">✕</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+      return (
+        '<div class="request-card">' +
+          '<div class="request-ava">'+initial+'</div>' +
+          '<div class="request-main">' +
+            '<div class="request-name">'+esc(r.company)+' / '+esc(r.name)+'</div>' +
+            '<div class="request-sub">' +
+              '<span class="request-count-badge">希望 '+esc(r.headcount)+'枚</span>' +
+              '<span>'+fmtRelative(r.createdAt)+'に申し込み</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="request-actions">' +
+            '<button class="btn sm primary" data-handle-request="'+r.id+'">対応する</button>' +
+            '<button class="btn sm ghost" data-dismiss-request="'+r.id+'" title="対応済みにする（貸出なし）">✕</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  
+  function normName(s){ return String(s||"").replace(/[\s\u3000]+/g, "").toLowerCase(); }
+  function loansForVisitor(company, name){
+    var c = normName(company), n = normName(name);
+    return activeLoans().filter(function(l){ return normName(l.company) === c && normName(l.name) === n; });
+  }
+
+  
+  
+  function handleReturnRequest(id){
+    var r = requests.find(function(x){ return x.id === id; });
+    if(!r) return;
+    var matched = loansForVisitor(r.company, r.name);
+    if(matched.length === 0){
+      toast("この来訪者の貸出中のカードキーが見つかりません。「貸出中」タブから返却してください");
+      return;
+    }
+    openReturnSheet(matched, r.company + " / " + r.name + " 様（返却の呼び出し）", id);
+  }
+
+  function handleRequest(id){
+    var r = requests.find(function(x){ return x.id === id; });
+    if(!r) return;
+    currentRequestId = id;
+    currentCompany = r.company;
+    currentName = r.name;
+    headcount = Math.max(1, Math.min(totalKeys, r.headcount || 1));
+    selectedKeys = [];
+    autoFillSelection(); 
+    $("#co-who-ava").textContent = esc((r.name || r.company || "?").charAt(0).toUpperCase());
+    $("#co-who-name").textContent = r.company+" / "+r.name+" 様";
+    $("#co-who-sub").textContent = "希望 "+headcount+"枚";
+    $("#co-err").classList.remove("show");
+    populateCoStaffOptions();
+    renderReceptionKeyGrid();
+    openSheet("#sheet-checkout");
+  }
+
+  
+  
+  
+  
+  function populateCoStaffOptions(){
+    var sel = $("#co-staff");
+    var sorted = staffList.slice().sort(function(a,b){ return (a.name||"").localeCompare(b.name||"","ja"); });
+    var prevValue = sel.value;
+    sel.innerHTML = '<option value="">選択してください</option>' + sorted.map(function(s){
+      return '<option value="'+s.id+'">'+esc(s.name)+'（'+esc(s.cNumber)+'）</option>';
+    }).join("");
+    var fallback = (loggedInStaff && sorted.some(function(s){ return s.id === loggedInStaff.id; }))
+      ? loggedInStaff.id
+      : "";
+    var keep = sorted.some(function(s){ return s.id === prevValue; }) ? prevValue : fallback;
+    sel.value = keep;
+  }
+
+  function closeCheckoutSheet(){
+    closeSheet("#sheet-checkout");
+    currentRequestId = null;
+    currentCompany = "";
+    currentName = "";
+  }
+
+  async function dismissRequest(id){
+    try{
+      var state = await gsRun("apiResolveRequest", id);
+      applyState(state);
+      if(currentRequestId === id) closeCheckoutSheet();
+      renderAll();
+      toast("対応済みにしました");
+    }catch(e){ toast("処理に失敗しました"); }
+  }
+
+  
+  
+  
+  
+  function dropUnavailableSelections(){
+    var avail = availableKeyNumbers();
+    selectedKeys = selectedKeys.filter(function(k){ return avail.indexOf(k) > -1; });
+  }
+
+  
+  function autoFillSelection(){
+    var avail = availableKeyNumbers();
+    while(selectedKeys.length < headcount){
+      var next = avail.find(function(k){ return selectedKeys.indexOf(k) === -1; });
+      if(next === undefined) break;
+      selectedKeys.push(next);
+    }
+    if(selectedKeys.length > headcount){ selectedKeys = selectedKeys.slice(0, headcount); }
+  }
+
+  function renderReceptionKeyGrid(){
+    dropUnavailableSelections();
+    var occ = occupiedMap();
+    var hintEl = $("#co-key-hint");
+    hintEl.textContent = selectedKeys.length + " / " + headcount + " 枚を選択";
+    hintEl.className = "key-count-hint" + (selectedKeys.length === headcount ? " ok" : " bad");
+
+    var html = "";
+    for(var i=1;i<=totalKeys;i++){
+      var isOcc = !!occ[i];
+      var isSel = selectedKeys.indexOf(i) > -1;
+      var cls = "key-tile" + (isOcc ? " occupied" : "") + (isSel ? " sel" : "");
+      html += '<div class="'+cls+'" data-key="'+i+'" title="'+(isOcc?"貸出中":"在庫")+'">'+i+'</div>';
+    }
+    $("#checkout-key-grid").innerHTML = html;
+    updateReceptionConfirmState();
+  }
+
+  function toggleReceptionKey(n){
+    var occ = occupiedMap();
+    if(occ[n]) return;
+    var idx = selectedKeys.indexOf(n);
+    if(idx > -1){
+      
+      selectedKeys.splice(idx,1);
+    } else if(selectedKeys.length >= headcount){
+      
+      selectedKeys.shift();
+      selectedKeys.push(n);
+    } else {
+      selectedKeys.push(n);
+    }
+    renderReceptionKeyGrid();
+  }
+
+  function updateReceptionConfirmState(){
+    var ok = currentCompany && currentName && selectedKeys.length === headcount && headcount >= 1 && $("#co-staff").value;
+    $("#co-confirm").disabled = !ok;
+  }
+
+  async function confirmCheckout(){
+    var errEl = $("#co-err");
+    errEl.classList.remove("show");
+    var company = currentCompany;
+    var name = currentName;
+    if(!company || !name){ errEl.textContent = "対応するグループ名・お名前が取得できませんでした"; errEl.classList.add("show"); return; }
+    if(selectedKeys.length !== headcount){ errEl.textContent = "選択したカードキーの枚数が人数と一致していません"; errEl.classList.add("show"); return; }
+    var selectedStaff = staffList.find(function(s){ return s.id === $("#co-staff").value; });
+    if(!selectedStaff){ errEl.textContent = "対応スタッフを選択してください"; errEl.classList.add("show"); return; }
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+
+    var keys = selectedKeys.slice();
+    var requestIdForCheckout = currentRequestId;
+    var staffCNumber = selectedStaff.cNumber || "";
+    var staffName = selectedStaff.name || "";
+    
+    
+    var btn = $("#co-confirm");
+    var originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "貸し出し処理中…";
+    try{
+      var result = await gsRun("apiCheckout", company, name, keys, requestIdForCheckout, staffCNumber, staffName, selectedStaff.id);
+      applyState(result.state);
+      var keysForDisplay = keys.slice().sort(function(a,b){ return a-b; });
+      toast(company+" 様に No."+keysForDisplay.join("・")+" を貸し出しました");
+      headcount = 1;
+      selectedKeys = [];
+      closeCheckoutSheet();
+      renderAll();
+    }catch(e){
+      var err = parseServerError(e);
+      if(err.code === "key_occupied"){
+        errEl.textContent = "No."+err.detail+" は他の端末で先に貸し出されました。選び直してください";
+      } else {
+        errEl.textContent = "記録に失敗しました。もう一度お試しください";
+      }
+      errEl.classList.add("show");
+      pollState();
+    }finally{
+      btn.textContent = originalLabel;
+      updateReceptionConfirmState();
+    }
+  }
+
+  
+  function renderBoard(){
+    var occ = occupiedMap();
+    var q = norm($("#board-search").value);
+    var html = "";
+    for(var i=1;i<=totalKeys;i++){
+      var l = occ[i];
+      var match = !q || (l && (norm(l.company).indexOf(q)>-1 || norm(l.name).indexOf(q)>-1));
+      var cls = "key-tile" + (l ? " occupied board" : "") + (l && q && !match ? "" : "");
+      var opacity = (l && q && !match) ? "opacity:.3;" : "";
+      html += '<div class="'+cls+'" style="'+opacity+'" data-boardkey="'+i+'" title="'+(l ? esc(l.company)+" / "+esc(l.name) : "在庫")+'">'+i+'</div>';
+    }
+    $("#board-grid").innerHTML = html;
+  }
+
+  
+  
+  
+  function renderHistory(){
+    var q = norm($("#history-search").value);
+    var el = $("#history-list");
+    if(loans.length === 0){
+      el.innerHTML = emptyState('<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>', "貸し出し履歴はまだありません", "貸出を行うとここに記録されます。");
+      return;
+    }
+    var list = loans.filter(function(l){
+      if(!q) return true;
+      return norm(l.company).indexOf(q)>-1 || norm(l.name).indexOf(q)>-1 || norm(l.staffName).indexOf(q)>-1 || norm(l.staffCNumber).indexOf(q)>-1;
+    });
+    if(list.length === 0){ el.innerHTML = '<div class="hint">該当する記録が見つかりません</div>'; return; }
+    el.innerHTML = list.map(function(l){
+      var statusTxt = l.status === "active" ? "貸出中" : "返却済み";
+      var staffLine = (l.staffName || l.staffCNumber)
+        ? ('<div class="loan-sub">担当: '+esc(l.staffName||"")+(l.staffCNumber ? '（'+esc(l.staffCNumber)+'）' : '')+'</div>')
+        : "";
+      return (
+        '<div class="card loan-row">' +
+          '<div class="loan-ava">'+esc((l.name||"?").charAt(0).toUpperCase())+'</div>' +
+          '<div class="loan-main">' +
+            '<div class="loan-item"><span class="keynum-badge">No.'+esc(l.keyNumber)+'</span>'+esc(l.company)+' / '+esc(l.name)+'</div>' +
+            '<div class="loan-sub">貸出 '+fmtDateTime(l.borrowedAt)+(l.returnedAt ? ' → 返却 '+fmtDateTime(l.returnedAt) : '・'+statusTxt)+'</div>' +
+            staffLine +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  function emptyState(iconPath, title, body){
+    return '<div class="empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none">'+iconPath+'</svg><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></div>';
+  }
+
+  var returnGroupId = null;
+  var returnRequestId = null; 
+  function openReturnForGroup(groupId){
+    returnGroupId = groupId;
+    var groupLoans = activeLoans().filter(function(l){ return l.groupId === groupId; });
+    if(groupLoans.length === 0){ toast("貸出中のカードキーが見つかりません"); return; }
+    var first = groupLoans[0];
+    openReturnSheet(groupLoans, first.company + " / " + first.name + "（" + fmtRelative(first.borrowedAt) + "に貸出）", null);
+  }
+  function openReturnSheet(loanList, whoText, requestId){
+    returnRequestId = requestId || null;
+    $("#ret-who").textContent = whoText;
+    $("#ret-list").innerHTML = loanList.map(function(l){
+      return (
+        '<label class="checkitem">' +
+          '<input type="checkbox" value="'+l.id+'" checked>' +
+          '<span class="keynum-badge">No.'+esc(l.keyNumber)+'</span>' +
+          '<span class="hint" style="margin:0;">'+fmtDateTime(l.borrowedAt)+' に貸出</span>' +
+        '</label>'
+      );
+    }).join("");
+    $("#ret-err").classList.remove("show");
+    openSheet("#sheet-return");
+  }
+
+  async function confirmReturn(){
+    var ids = $all("#ret-list input[type=checkbox]:checked").map(function(cb){ return cb.value; });
+    if(ids.length === 0){ $("#ret-err").textContent = "返却するカードキーを選んでください"; $("#ret-err").classList.add("show"); return; }
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+    var btn = $("#ret-confirm");
+    var originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "返却処理中…";
+    try{
+      var result = await gsRun("apiReturn", ids);
+      applyState(result.state);
+      if(returnRequestId){
+        try{ applyState(await gsRun("apiResolveRequest", returnRequestId)); }catch(e2){}
+        returnRequestId = null;
+      }
+      toast(ids.length+"件のカードキーを返却しました");
+      closeSheet("#sheet-return");
+      renderAll();
+    }catch(e){
+      $("#ret-err").textContent = "返却の記録に失敗しました";
+      $("#ret-err").classList.add("show");
+    }finally{
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+
+  
+  function renderVisitorList(){
+    var q = norm($("#visitor-search").value);
+    var list = visitors.filter(function(v){
+      if(!q) return true;
+      return norm(v.company).indexOf(q)>-1 || norm(v.name).indexOf(q)>-1;
+    }).sort(function(a,b){ return (a.company||"").localeCompare(b.company||"","ja"); });
+
+    var el = $("#visitor-list");
+    if(visitors.length === 0){
+      el.innerHTML = '<div class="hint">まだ登録がありません。受付タブで貸出すると自動で登録されます。</div>';
+      return;
+    }
+    if(list.length === 0){ el.innerHTML = '<div class="hint">該当する訪問者が見つかりません</div>'; return; }
+    el.innerHTML = list.map(function(v){
+      return (
+        '<div class="card visitor-row" style="padding:10px 12px;">' +
+          '<div class="visitor-main">' +
+            '<div class="visitor-name">'+esc(v.company)+'</div>' +
+            '<div class="visitor-sub">'+esc(v.name)+'</div>' +
+          '</div>' +
+          '<button class="btn sm" data-edit-visitor="'+v.id+'">編集</button>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  var editingVisitorId = null;
+  function openVisitorForm(v){
+    editingVisitorId = v ? v.id : null;
+    $("#v-form-title").textContent = v ? "訪問者を編集" : "訪問者を登録";
+    $("#v-company").value = v ? v.company : "";
+    $("#v-name").value = v ? v.name : "";
+    $("#v-err").classList.remove("show");
+    $("#v-delete").style.display = v ? "" : "none";
+    openSheet("#sheet-visitor");
+  }
+
+  async function saveVisitorForm(){
+    var company = $("#v-company").value.trim();
+    var name = $("#v-name").value.trim();
+    var errEl = $("#v-err");
+    if(!company || !name){ errEl.textContent = "会社名とお名前を入力してください"; errEl.classList.add("show"); return; }
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+    try{
+      if(editingVisitorId){
+        await gsRun("apiUpdateVisitor", editingVisitorId, company, name);
+        toast("訪問者情報を更新しました");
+      } else {
+        await gsRun("apiAddVisitor", company, name);
+        toast("訪問者を登録しました");
+      }
+      await pollState();
+      renderAll();
+      closeSheet("#sheet-visitor");
+    }catch(e){ errEl.textContent = "保存に失敗しました"; errEl.classList.add("show"); }
+  }
+
+  async function deleteVisitor(){
+    if(!editingVisitorId) return;
+    try{
+      await gsRun("apiDeleteVisitor", editingVisitorId);
+      await pollState();
+      renderAll();
+      toast("削除しました");
+      closeSheet("#sheet-visitor");
+    }catch(e){ toast("削除に失敗しました"); }
+  }
+
+  
+  function renderStaffList(){
+    var q = norm($("#staff-search").value);
+    var list = staffList.filter(function(s){
+      if(!q) return true;
+      return norm(s.cNumber).indexOf(q)>-1 || norm(s.name).indexOf(q)>-1;
+    }).sort(function(a,b){ return (a.cNumber||"").localeCompare(b.cNumber||"","ja"); });
+
+    var el = $("#staff-list");
+    var canManage = !!(loggedInStaff && loggedInStaff.isOwner);
+    var note = canManage ? "" : '<div class="hint" style="margin-bottom:8px;">スタッフの追加・編集はオーナーのみ行えます</div>';
+    if(staffList.length === 0){
+      el.innerHTML = '<div class="hint">まだ登録がありません。「+ 新規登録」からスタッフを追加してください。</div>';
+      return;
+    }
+    if(list.length === 0){ el.innerHTML = note + '<div class="hint">該当するスタッフが見つかりません</div>'; return; }
+    el.innerHTML = note + list.map(function(s){
+      return (
+        '<div class="card visitor-row" style="padding:10px 12px;">' +
+          '<div class="visitor-main">' +
+            '<div class="visitor-name">'+esc(s.name)+(s.isOwner ? ' <span style="font-size:10.5px; font-weight:600; color:var(--accent); background:var(--accent-soft); border-radius:999px; padding:1px 8px; vertical-align:middle;">オーナー</span>' : '')+'</div>' +
+            '<div class="visitor-sub">C番号: '+esc(s.cNumber)+'</div>' +
+          '</div>' +
+          (canManage ? '<button class="btn sm" data-edit-staff="'+s.id+'">編集</button>' : '') +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  async function loadStaffList(){
+    try{
+      staffList = await gsRun("apiListStaff", loggedInStaff ? loggedInStaff.cNumber : "", sessionLoginId);
+      renderStaffList();
+    }catch(e){   }
+  }
+
+  var editingStaffId = null;
+  function openStaffForm(s){
+    editingStaffId = s ? s.id : null;
+    $("#st-form-title").textContent = s ? "スタッフを編集" : "スタッフを登録";
+    $("#st-cnumber").value = s ? s.cNumber : "";
+    $("#st-name").value = s ? s.name : "";
+    $("#st-err").classList.remove("show");
+    $("#st-delete").style.display = (s && !s.isOwner) ? "" : "none";
+    openSheet("#sheet-staff");
+  }
+
+  async function saveStaffForm(){
+    var cNumber = $("#st-cnumber").value.trim();
+    var name = $("#st-name").value.trim();
+    var password = ""; 
+    var errEl = $("#st-err");
+    if(!cNumber || !name){ errEl.textContent = "C番号とお名前を入力してください"; errEl.classList.add("show"); return; }
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+    try{
+      if(editingStaffId){
+        var self = staffList.find(function(x){ return loggedInStaff && x.id === loggedInStaff.id; });
+        await gsRun("apiUpdateStaff", editingStaffId, cNumber, password, name, loggedInStaff.cNumber, sessionLoginId);
+        
+        if(self && self.id === editingStaffId){
+          loggedInStaff.cNumber = cNumber;
+          loggedInStaff.name = name;
+        }
+        toast("スタッフ情報を更新しました");
+      } else {
+        await gsRun("apiAddStaff", cNumber, password, name, loggedInStaff.cNumber, sessionLoginId);
+        toast("スタッフを登録しました");
+      }
+      await loadStaffList();
+      closeSheet("#sheet-staff");
+    }catch(e){
+      var err = parseServerError(e);
+      if(err.code === "duplicate_cnumber"){ errEl.textContent = "そのC番号は既に使われています"; }
+      else if(err.code === "not_owner"){ errEl.textContent = "スタッフの追加・編集はオーナーのみ行えます"; }
+      else { errEl.textContent = "保存に失敗しました"; }
+      errEl.classList.add("show");
+    }
+  }
+
+  async function deleteStaff(){
+    if(!editingStaffId) return;
+    try{
+      await gsRun("apiDeleteStaff", editingStaffId, loggedInStaff.cNumber, sessionLoginId);
+      await loadStaffList();
+      toast("削除しました");
+      closeSheet("#sheet-staff");
+    }catch(e){
+      var err = parseServerError(e);
+      if(err.code === "cannot_delete_owner"){ toast("オーナーのアカウントは削除できません"); }
+      else if(err.code === "not_owner"){ toast("スタッフの削除はオーナーのみ行えます"); }
+      else { toast("削除に失敗しました"); }
+    }
+  }
+
+  
+  async function saveTotalKeys(){
+    var errEl = $("#s-total-err");
+    errEl.classList.remove("show");
+    var v = parseInt($("#s-total").value, 10);
+    if(!v || v < 1){ errEl.textContent = "1以上の数値を入力してください"; errEl.classList.add("show"); return; }
+    var maxActive = activeLoans().reduce(function(m,l){ return Math.max(m, l.keyNumber||0); }, 0);
+    if(v < maxActive){
+      errEl.textContent = "現在貸出中の最大番号（No."+maxActive+"）より小さい値には変更できません";
+      errEl.classList.add("show");
+      return;
+    }
+    if(!apiReady){ toast("サーバーに接続されていません"); return; }
+    try{
+      var state = await gsRun("apiUpdateSettings", v);
+      applyState(state);
+      toast("総本数を更新しました");
+      renderAll();
+    }catch(e){ errEl.textContent = "保存に失敗しました"; errEl.classList.add("show"); }
+  }
+
+  
+  function openSheet(sel){ $(sel).classList.add("open"); }
+  function closeSheet(sel){ $(sel).classList.remove("open"); }
+  function switchTab(tab){
+    $all(".view").forEach(function(v){ v.classList.remove("active"); });
+    $("#view-"+tab).classList.add("active");
+    $all(".tab-btn").forEach(function(b){ b.classList.toggle("on", b.dataset.tab === tab); });
+  }
+
+  
+  document.addEventListener("click", function(){
+    
+    
+    try{
+      if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      if(audioCtx.state === "suspended"){ audioCtx.resume(); }
+    }catch(e){   }
+  }, { once: true });
+
+  document.addEventListener("click", function(e){
+    var keyTile = e.target.closest("#checkout-key-grid [data-key]");
+    if(keyTile){ toggleReceptionKey(parseInt(keyTile.getAttribute("data-key"),10)); return; }
+
+    var boardTile = e.target.closest("#board-grid .key-tile.occupied");
+    if(boardTile){
+      var n = parseInt(boardTile.getAttribute("data-boardkey"),10);
+      var occ = occupiedMap();
+      if(occ[n]) openReturnForGroup(occ[n].groupId);
+      return;
+    }
+
+    var editV = e.target.closest("[data-edit-visitor]");
+    if(editV){ var v = visitors.find(function(x){ return x.id === editV.getAttribute("data-edit-visitor"); }); if(v) openVisitorForm(v); return; }
+
+    var editSt = e.target.closest("[data-edit-staff]");
+    if(editSt){ var s = staffList.find(function(x){ return x.id === editSt.getAttribute("data-edit-staff"); }); if(s) openStaffForm(s); return; }
+
+    var returnBtn = e.target.closest("[data-handle-return]");
+    if(returnBtn){ handleReturnRequest(returnBtn.getAttribute("data-handle-return")); return; }
+
+    var handleBtn = e.target.closest("[data-handle-request]");
+    if(handleBtn){ handleRequest(handleBtn.getAttribute("data-handle-request")); return; }
+
+    var dismissBtn = e.target.closest("[data-dismiss-request]");
+    if(dismissBtn){ dismissRequest(dismissBtn.getAttribute("data-dismiss-request")); return; }
+
+    var closeBtn = e.target.closest("[data-close]");
+    if(closeBtn){
+      var sheet = closeBtn.closest(".sheet-backdrop");
+      if(sheet){ if(sheet.id === "sheet-checkout"){ closeCheckoutSheet(); } else { closeSheet("#"+sheet.id); } }
+      return;
+    }
+
+    var tabBtn = e.target.closest(".tab-btn");
+    if(tabBtn){ switchTab(tabBtn.dataset.tab); return; }
+  });
+
+  $all(".sheet-backdrop").forEach(function(sb){
+    sb.addEventListener("click", function(e){
+      if(e.target === sb){ if(sb.id === "sheet-checkout"){ closeCheckoutSheet(); } else { closeSheet("#"+sb.id); } }
+    });
+  });
+
+  $("#co-confirm").addEventListener("click", confirmCheckout);
+  $("#co-staff").addEventListener("change", updateReceptionConfirmState);
+
+  $("#bell-toggle").addEventListener("click", function(){ setBellEnabled(!bellEnabled); });
+  updateBellToggleUI();
+
+  $("#board-search").addEventListener("input", renderBoard);
+  $("#history-search").addEventListener("input", renderHistory);
+
+  $("#ret-confirm").addEventListener("click", confirmReturn);
+
+  $("#visitor-search").addEventListener("input", renderVisitorList);
+  $("#visitor-add-btn").addEventListener("click", function(){ openVisitorForm(null); });
+  $("#v-save").addEventListener("click", saveVisitorForm);
+  $("#v-delete").addEventListener("click", deleteVisitor);
+  $("#s-total-save").addEventListener("click", saveTotalKeys);
+
+  $("#staff-search").addEventListener("input", renderStaffList);
+  $("#staff-add-btn").addEventListener("click", function(){ openStaffForm(null); });
+  $("#st-save").addEventListener("click", saveStaffForm);
+  $("#st-delete").addEventListener("click", deleteStaff);
+
+  $("#login-submit").addEventListener("click", attemptStaffLogin);
+  $("#login-cnumber").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); attemptStaffLogin(); } });
+  $("#login-password").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); attemptStaffLogin(); } });
+
+})();
+</script>
+
+</body>
+</html>
