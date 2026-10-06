@@ -10,35 +10,35 @@
 
 <style>
   :root{
-    --bg:#eef2ee; --surface:#ffffff; --surface-2:#e3e9e2; --border:#ccd5cb;
-    --ink:#16211c; --ink-muted:#54635b;
-    --accent:#0f6b5c; --accent-ink:#ffffff; --accent-soft:#dcefea;
-    --warn:#8a5a10; --warn-soft:#f8ecd9;
-    --danger:#a8362c; --danger-soft:#f8e2df;
-    --good:#1b7a4b; --good-soft:#e1f2e7;
-    --shadow: 0 1px 2px rgba(20,30,25,.06), 0 6px 20px rgba(20,30,25,.06);
+    --bg:#f1f0ea; --surface:#fbfaf6; --surface-2:#e9e8e0; --border:#d6d5ca;
+    --ink:#23282a; --ink-muted:#555d5a;
+    --accent:#27705f; --accent-ink:#ffffff; --accent-soft:#dcebe4;
+    --warn:#865712; --warn-soft:#f4e8d3;
+    --danger:#a5413a; --danger-soft:#f4e0db;
+    --good:#2a7650; --good-soft:#e0eee3;
+    --shadow: 0 1px 2px rgba(40,40,30,.05), 0 4px 14px rgba(40,40,30,.05);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
-      --ink:#eaf1ec; --ink-muted:#9fb0a7;
-      --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
-      --warn:#f0b15a; --warn-soft:#3a2a12;
-      --danger:#f4867e; --danger-soft:#3a1613;
-      --good:#77dd9f; --good-soft:#123321;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --bg:#161b19; --surface:#1e2522; --surface-2:#262e2a; --border:#38423d;
+      --ink:#dfe6e1; --ink-muted:#a3b0a9;
+      --accent:#6cc9b2; --accent-ink:#0b221c; --accent-soft:#1c3631;
+      --warn:#e6b46c; --warn-soft:#37290f;
+      --danger:#ee948c; --danger-soft:#3a1d1a;
+      --good:#86d6a6; --good-soft:#173324;
+      --shadow: 0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.28);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#121815; --surface:#1a2320; --surface-2:#212b26; --border:#344039;
-    --ink:#eaf1ec; --ink-muted:#9fb0a7;
-    --accent:#57ddc0; --accent-ink:#08221d; --accent-soft:#173733;
-    --warn:#f0b15a; --warn-soft:#3a2a12;
-    --danger:#f4867e; --danger-soft:#3a1613;
-    --good:#77dd9f; --good-soft:#123321;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --bg:#161b19; --surface:#1e2522; --surface-2:#262e2a; --border:#38423d;
+    --ink:#dfe6e1; --ink-muted:#a3b0a9;
+    --accent:#6cc9b2; --accent-ink:#0b221c; --accent-soft:#1c3631;
+    --warn:#e6b46c; --warn-soft:#37290f;
+    --danger:#ee948c; --danger-soft:#3a1d1a;
+    --good:#86d6a6; --good-soft:#173324;
+    --shadow: 0 1px 2px rgba(0,0,0,.25), 0 6px 18px rgba(0,0,0,.28);
     color-scheme: dark;
   }
 
@@ -69,21 +69,22 @@
 
   header.top{
     position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
-    background:var(--bg); border-bottom:1px solid var(--border); padding:14px 16px 10px;
+    background:var(--bg); border-bottom:1px solid var(--border); padding:14px 16px 12px;
   }
   .brand{ display:flex; align-items:baseline; gap:8px; }
   .brand .mark{ font-size:20px; font-weight:700; letter-spacing:.02em; }
-  .brand .sub{ font-size:12px; color:var(--ink-muted); }
+  .brand{ flex-wrap:wrap; row-gap:2px; }
+  .brand .sub{ font-size:12.5px; color:var(--ink-muted); }
   .stats{ display:flex; gap:10px; margin-top:10px; }
-  .stat{ flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; }
+  .stat{ flex:1; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; }
   .stat .n{ font-family:"IBM Plex Mono",monospace; font-size:18px; font-weight:600; }
-  .stat .l{ font-size:11px; color:var(--ink-muted); }
+  .stat .l{ font-size:12px; color:var(--ink-muted); }
   .stat.warn .n{ color:var(--warn); }
 
   main{ flex:1; padding:14px 16px 28px; }
   .view{ display:none; } .view.active{ display:block; }
 
-  h3.step-title{ font-size:12.5px; font-weight:700; color:var(--ink-muted); margin:0 0 8px; text-transform:uppercase; letter-spacing:.04em; }
+  h3.step-title{ font-size:13px; font-weight:700; color:var(--ink-muted); margin:0 0 8px; text-transform:uppercase; letter-spacing:.04em; }
   h3.step-title.with-action{ display:flex; align-items:center; justify-content:space-between; gap:8px; text-transform:none; }
   .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:var(--shadow); }
 
@@ -94,7 +95,7 @@
   #request-queue-card.flash{ animation:request-flash .9s ease-in-out 2; }
   @media (prefers-reduced-motion: reduce){ #request-queue-card.flash{ animation:none; } }
 
-  label{ display:block; font-size:12.5px; color:var(--ink-muted); margin:12px 0 6px; font-weight:600; }
+  label{ display:block; font-size:13px; color:var(--ink-muted); margin:12px 0 6px; font-weight:600; }
   label:first-of-type{ margin-top:0; }
   input[type=text], input[type=password], input[type=number], input[type=date], textarea, select{
     width:100%; border:1px solid var(--border); background:var(--surface); color:var(--ink);
@@ -137,7 +138,7 @@
   .btn.ghost{ background:transparent; border-color:transparent; padding:8px 10px; }
   .btn.block{ width:100%; }
   .btn:disabled{ opacity:.4; cursor:not-allowed; }
-  .btn.sm{ padding:7px 10px; font-size:12.5px; border-radius:8px; }
+  .btn.sm{ padding:8px 12px; font-size:13px; border-radius:8px; min-height:36px; }
 
   .search{ display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 10px; }
   .search input{ border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:9px 0; width:100%; font-family:inherit; }
@@ -151,8 +152,8 @@
   .loan-row{ display:flex; align-items:flex-start; gap:12px; }
   .loan-ava{ flex:none; width:36px; height:36px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
   .loan-main{ flex:1; min-width:0; }
-  .loan-item{ font-weight:600; font-size:14px; }
-  .loan-sub{ font-size:12px; color:var(--ink-muted); margin-top:2px; }
+  .loan-item{ font-weight:600; font-size:15px; }
+  .loan-sub{ font-size:13px; color:var(--ink-muted); margin-top:2px; }
   .keynum-badge{ font-family:"IBM Plex Mono",monospace; background:var(--surface-2); border-radius:6px; padding:1px 6px; font-size:11.5px; margin-right:4px; }
 
   .empty{ text-align:center; padding:48px 20px; color:var(--ink-muted); }
@@ -162,17 +163,17 @@
 
   .visitor-row{ display:flex; align-items:center; gap:10px; }
   .visitor-main{ flex:1; min-width:0; }
-  .visitor-name{ font-weight:600; font-size:14px; }
-  .visitor-sub{ font-size:12px; color:var(--ink-muted); }
+  .visitor-name{ font-weight:600; font-size:15px; }
+  .visitor-sub{ font-size:13px; color:var(--ink-muted); }
 
-  .request-card{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .request-card{ display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:14px 0; border-bottom:1px solid var(--border); }
   .request-card:last-child{ border-bottom:none; }
   .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
-  .request-main{ flex:1; min-width:0; }
+  .request-main{ flex:1 1 180px; min-width:0; }
   .request-name{ font-weight:700; font-size:15px; }
-  .request-sub{ font-size:12px; color:var(--ink-muted); margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .request-sub{ font-size:13px; color:var(--ink-muted); margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .request-count-badge{ display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:12.5px; padding:2px 10px; border-radius:999px; font-family:"IBM Plex Mono",monospace; white-space:nowrap; }
-  .request-actions{ display:flex; gap:6px; flex:none; }
+  .request-actions{ display:flex; gap:6px; flex:none; align-items:center; }
 
   .checkout-who{ display:flex; align-items:center; gap:12px; background:var(--surface-2); border-radius:12px; padding:12px 14px; margin-bottom:18px; }
   .checkout-who-ava{ flex:none; width:44px; height:44px; border-radius:999px; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
@@ -192,7 +193,7 @@
     display:flex; justify-content:flex-start;
   }
   nav.tabs .inner{ width:100%; display:flex; flex-direction:column; gap:8px; }
-  .tab-btn{ flex:none; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-muted); font-size:10.5px; padding:10px 4px; border-radius:12px; font-family:inherit; }
+  .tab-btn{ flex:none; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-muted); font-size:11.5px; padding:10px 2px; border-radius:12px; white-space:nowrap; font-family:inherit; }
   .tab-btn.on{ color:var(--accent); background:var(--accent-soft); }
   .tab-btn svg{ width:22px; height:22px; }
 
@@ -210,7 +211,7 @@
   .sheet-handle{ width:36px; height:4px; background:var(--border); border-radius:99px; margin:2px auto 14px; }
   .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .sheet-head h2{ font-size:17px; margin:0; }
-  .hint{ font-size:12px; color:var(--ink-muted); margin-top:6px; }
+  .hint{ font-size:13px; color:var(--ink-muted); margin-top:6px; }
   .err{ font-size:12.5px; color:var(--danger); margin-top:8px; display:none; } .err.show{ display:block; }
   .actions{ display:flex; gap:10px; margin-top:20px; }
 
@@ -229,10 +230,30 @@
   a{ color:var(--accent); }
 
    
+  /* スマホ：左のメニューは横幅を取りすぎるので、下のタブバーにする */
+  @media (max-width: 599px){
+    body{ padding-left:0; padding-bottom:calc(68px + env(safe-area-inset-bottom,0px)); }
+    nav.tabs{
+      left:0; right:0; top:auto; bottom:0; width:auto; height:calc(62px + env(safe-area-inset-bottom,0px));
+      border-right:none; border-top:1px solid var(--border);
+      padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+    }
+    nav.tabs .inner{ flex-direction:row; gap:4px; }
+    .tab-btn{ flex:1; padding:6px 2px; gap:2px; }
+    .toast{ left:50%; bottom:calc(78px + env(safe-area-inset-bottom,0px)); }
+    header.top{ padding:12px 14px 10px; }
+    main{ padding:12px 14px 20px; }
+    .brand .sub{ flex-basis:100%; }
+    .request-actions{ width:100%; }
+    .request-actions .btn.primary{ flex:1; min-height:44px; font-size:14px; }
+  }
+
   @media (min-width: 860px){
     body{ padding-left:88px; }
     nav.tabs{ width:88px; }
     .app{ max-width:1040px; }
+    header.top{ padding:16px 28px 0; border-bottom:none; }
+    header.top::after{ content:""; display:block; height:1px; background:var(--border); margin-top:12px; }
     main{ padding:20px 28px 32px; }
     .reception-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:16px; align-items:start; }
     .reception-left .card:last-child{ margin-bottom:0; }
@@ -274,7 +295,7 @@
     <section class="view active" id="view-reception">
       <div class="card" id="request-queue-card" style="display:none;">
         <h3 class="step-title with-action">
-          <span>来訪受付フォームからの申し込み・返却 <span id="request-queue-count" class="mono"></span></span>
+          <span>来訪の申し込み・返却 <span id="request-queue-count" class="mono"></span></span>
           <button class="btn sm ghost" id="bell-toggle" type="button" aria-pressed="true" title="来訪通知音: ON（クリックでOFF）">🔔</button>
         </h3>
         <div id="request-queue"></div>
@@ -305,7 +326,7 @@
       <div class="toolbar">
         <div class="search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <input type="text" id="history-search" placeholder="会社名・名前・担当者で検索">
+          <input type="text" id="history-search" placeholder="会社名・名前・担当者">
         </div>
       </div>
       <div id="history-list"></div>
