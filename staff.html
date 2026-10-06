@@ -13,6 +13,7 @@
     --bg:#f1f0ea; --surface:#fbfaf6; --surface-2:#e9e8e0; --border:#d6d5ca;
     --ink:#23282a; --ink-muted:#555d5a;
     --accent:#27705f; --accent-ink:#ffffff; --accent-soft:#dcebe4;
+    --grad:linear-gradient(135deg,#27754a 0%,#1a7f74 50%,#2a69a5 100%); --grad-soft:linear-gradient(135deg,#dcebe4 0%,#d8eeec 50%,#dde8f4 100%);
     --warn:#865712; --warn-soft:#f4e8d3;
     --danger:#a5413a; --danger-soft:#f4e0db;
     --good:#2a7650; --good-soft:#e0eee3;
@@ -24,6 +25,7 @@
       --bg:#161b19; --surface:#1e2522; --surface-2:#262e2a; --border:#38423d;
       --ink:#dfe6e1; --ink-muted:#a3b0a9;
       --accent:#6cc9b2; --accent-ink:#0b221c; --accent-soft:#1c3631;
+    --grad:linear-gradient(135deg,#6cd6a0 0%,#5fd0c4 50%,#78b4ee 100%); --grad-soft:linear-gradient(135deg,#1c3631 0%,#1a3638 50%,#1d3040 100%);
       --warn:#e6b46c; --warn-soft:#37290f;
       --danger:#ee948c; --danger-soft:#3a1d1a;
       --good:#86d6a6; --good-soft:#173324;
@@ -35,6 +37,7 @@
     --bg:#161b19; --surface:#1e2522; --surface-2:#262e2a; --border:#38423d;
     --ink:#dfe6e1; --ink-muted:#a3b0a9;
     --accent:#6cc9b2; --accent-ink:#0b221c; --accent-soft:#1c3631;
+    --grad:linear-gradient(135deg,#6cd6a0 0%,#5fd0c4 50%,#78b4ee 100%); --grad-soft:linear-gradient(135deg,#1c3631 0%,#1a3638 50%,#1d3040 100%);
     --warn:#e6b46c; --warn-soft:#37290f;
     --danger:#ee948c; --danger-soft:#3a1d1a;
     --good:#86d6a6; --good-soft:#173324;
@@ -49,6 +52,8 @@
     -webkit-font-smoothing:antialiased; padding-left:72px;
   }
   .mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  /* ほんのりグラデーション：画面上端の細いライン */
+  body::before{ content:""; position:fixed; top:0; left:0; right:0; height:3px; background:var(--grad); z-index:200; pointer-events:none; }
 
   .app{ max-width:640px; margin:0 auto; min-height:100%; display:none; flex-direction:column; }
   .app.show{ display:flex; }
@@ -67,7 +72,7 @@
     background:var(--bg); border-bottom:1px solid var(--border); padding:14px 16px 12px;
   }
   .brand{ display:flex; align-items:baseline; gap:8px; }
-  .brand .mark{ font-size:20px; font-weight:700; letter-spacing:.02em; }
+  .brand .mark{ font-size:20px; font-weight:700; letter-spacing:.02em; color:var(--accent); background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .brand{ flex-wrap:wrap; row-gap:2px; }
   .brand .sub{ font-size:12.5px; color:var(--ink-muted); }
   .stats{ display:flex; gap:10px; margin-top:10px; }
@@ -136,7 +141,7 @@
     border:1px solid var(--border); background:var(--surface); color:var(--ink); padding:10px 14px;
     font-size:14px; font-weight:600;
   }
-  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.primary{ background:var(--grad); border-color:transparent; color:var(--accent-ink); }
   .btn.danger{ background:transparent; border-color:var(--danger); color:var(--danger); }
   .btn.ghost{ background:transparent; border-color:transparent; padding:8px 10px; }
   .btn.block{ width:100%; }
@@ -168,7 +173,7 @@
 
   .request-card{ display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:14px 0; border-bottom:1px solid var(--border); }
   .request-card:last-child{ border-bottom:none; }
-  .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+  .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--grad); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
   .request-main{ flex:1 1 180px; min-width:0; }
   .request-name{ font-weight:700; font-size:15px; }
   .request-sub{ font-size:13px; color:var(--ink-muted); margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -194,7 +199,7 @@
   }
   nav.tabs .inner{ width:100%; display:flex; flex-direction:column; gap:8px; }
   .tab-btn{ flex:none; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--ink-muted); font-size:11.5px; padding:10px 2px; border-radius:12px; white-space:nowrap; font-family:inherit; }
-  .tab-btn.on{ color:var(--accent); background:var(--accent-soft); }
+  .tab-btn.on{ color:var(--accent); background:var(--grad-soft); }
   .tab-btn svg{ width:22px; height:22px; }
 
   .sheet-backdrop{
