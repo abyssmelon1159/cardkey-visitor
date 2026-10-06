@@ -101,6 +101,7 @@
   .done .icon{ width:56px; height:56px; border-radius:999px; background:var(--good-soft); color:var(--good); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; transition:background .25s,color .25s; }
   .done .icon.pending{ background:var(--surface-2); color:var(--ink-muted); }
   .done h2{ font-size:19px; margin:0 0 8px; }
+  .keep-open{ background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:13px !important; color:var(--ink) !important; line-height:1.7; text-align:left; }
   .done p{ font-size:14px; color:var(--ink-muted); line-height:1.7; margin:0 0 20px; }
 
   .steps{ display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 18px; }
@@ -205,6 +206,7 @@
         </div>
         <h2 id="done-title">受付スタッフに伝わりました</h2>
         <p id="done-msg">このままお待ちください。まもなくスタッフが確認します。</p>
+        <p class="keep-open" id="keep-open"><strong>対応が終わるまで、このページを閉じないでください。</strong><br>もし閉じてしまった場合は、もう一度QRコードを読み取ってください。</p>
         <button class="btn" id="done-return" type="button" style="margin-bottom:8px;">カードキーを返却する</button>
         <button class="btn" id="submit-another" type="button">別の来訪者として受付する</button>
       </div>
@@ -317,6 +319,7 @@
 
   // ---------- 送信後のステータス表示（スタッフが「対応する」を押すまで待つ） ----------
   function resetDoneStatusUI(){
+    $("#keep-open").style.display = "";
     $("#done-icon").classList.add("pending");
     $("#done-icon").innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4l2.6 1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     var step = $("#step-confirmed");
@@ -324,6 +327,7 @@
     step.classList.add("active-step");
   }
   function markHandledUI(){
+    $("#keep-open").style.display = "none";
     var icon = $("#done-icon");
     icon.classList.remove("pending");
     icon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
