@@ -10,47 +10,47 @@
 
 <style>
   :root{
-    --bg:#e8edf4; --surface:#e8edf4; --surface-2:#dde4ee; --border:#cdd6e3;
-    --ink:#2f3b4d; --ink-muted:#5a6a7f;
-    --accent:#0b7f6c; --accent-ink:#052a30; --accent-soft:#d3ece6;
-    --grad:linear-gradient(135deg,#36e2a8 0%,#2cb8ee 55%,#a08ee9 100%);
-    --grad-soft:linear-gradient(135deg,#d7f5ea 0%,#d4eaf8 55%,#e3ddf6 100%);
+    --bg:#edf2f9; --surface:#edf2f9; --surface-2:#e3eaf4; --border:#d3dcea;
+    --ink:#2b3a52; --ink-muted:#5c6f8a;
+    --accent:#1f6fc4; --accent-ink:#0a2a4d; --accent-soft:#d9e8f9;
+    --grad:linear-gradient(135deg,#74d2ff 0%,#47a9f4 100%);
+    --grad-soft:linear-gradient(135deg,#e3f2ff 0%,#d9e8fb 100%);
     --warn:#8a5a10; --warn-soft:#f3e6cf;
     --danger:#b23f38; --danger-soft:#f6dedb;
     --good:#16794f; --good-soft:#d9efe3;
     /* ニューモーフィズム：明るい影(左上)と暗い影(右下)で、面を押し出し・へこませる */
-    --nm-l:#ffffff; --nm-d:#c5cfdd;
-    --grad-text:linear-gradient(135deg,#0a9a70 0%,#1384c4 55%,#6a55c4 100%);
-    --sh-raise:6px 6px 14px var(--nm-d), -6px -6px 14px var(--nm-l);
-    --sh-raise-s:3px 3px 7px var(--nm-d), -3px -3px 7px var(--nm-l);
+    --nm-l:#ffffff; --nm-d:#c9d4e4;
+    --grad-text:linear-gradient(135deg,#1d8fd9 0%,#1f5fbf 100%);
+    --sh-raise:7px 7px 16px var(--nm-d), -7px -7px 16px var(--nm-l);
+    --sh-raise-s:4px 4px 9px var(--nm-d), -4px -4px 9px var(--nm-l);
     --sh-inset:inset 3px 3px 7px var(--nm-d), inset -3px -3px 7px var(--nm-l);
     --shadow:var(--sh-raise);
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#252a33; --surface:#252a33; --surface-2:#1f242c; --border:#394150;
-      --ink:#e4e9f1; --ink-muted:#a2afc0;
-      --accent:#52e3b8; --accent-ink:#06262c; --accent-soft:#1f3a3a;
-      --grad-soft:linear-gradient(135deg,#1f3a3a 0%,#1f3446 55%,#2e2c4a 100%);
+      --bg:#212a37; --surface:#212a37; --surface-2:#1b2330; --border:#344256;
+      --ink:#e3ebf6; --ink-muted:#9fb1c9;
+      --accent:#6cc4ff; --accent-ink:#06223f; --accent-soft:#233a54;
+      --grad-soft:linear-gradient(135deg,#233a54 0%,#24324a 100%);
       --warn:#e6b46c; --warn-soft:#3a2c12;
       --danger:#f08f88; --danger-soft:#3d2224;
       --good:#7fdca6; --good-soft:#1b3a2a;
-      --nm-l:#2f3541; --nm-d:#1a1e25;
+      --nm-l:#2b3547; --nm-d:#161c26;
       --grad-text:var(--grad);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#252a33; --surface:#252a33; --surface-2:#1f242c; --border:#394150;
-    --ink:#e4e9f1; --ink-muted:#a2afc0;
-    --accent:#52e3b8; --accent-ink:#06262c; --accent-soft:#1f3a3a;
-    --grad-soft:linear-gradient(135deg,#1f3a3a 0%,#1f3446 55%,#2e2c4a 100%);
+    --bg:#212a37; --surface:#212a37; --surface-2:#1b2330; --border:#344256;
+    --ink:#e3ebf6; --ink-muted:#9fb1c9;
+    --accent:#6cc4ff; --accent-ink:#06223f; --accent-soft:#233a54;
+    --grad-soft:linear-gradient(135deg,#233a54 0%,#24324a 100%);
     --warn:#e6b46c; --warn-soft:#3a2c12;
     --danger:#f08f88; --danger-soft:#3d2224;
     --good:#7fdca6; --good-soft:#1b3a2a;
-    --nm-l:#2f3541; --nm-d:#1a1e25;
-      --grad-text:var(--grad);
+    --nm-l:#2b3547; --nm-d:#161c26;
+    --grad-text:var(--grad);
     color-scheme: dark;
   }
 
@@ -190,6 +190,19 @@
   .step-line{ background:var(--nm-d); }
   .step.done-step .dot{ background:var(--good); }
   .step.active-step .dot{ background:var(--accent); }
+  /* ===== スカイブルー版：丸いカプセル形（レイアウトはそのまま） ===== */
+  input[type=text], input[type=password], input[type=number], input[type=date], select{ border-radius:999px; padding-left:18px; padding-right:18px; }
+  textarea{ border-radius:18px; }
+  .btn, .btn.sm{ border-radius:999px; }
+  .search, .toast{ border-radius:999px; }
+  .search{ padding:0 16px; }
+  .card{ border-radius:26px; }
+  .stat{ border-radius:20px; }
+  .key-tile, .key-grid.lg .key-tile{ border-radius:18px; }
+  .tab-btn{ border-radius:20px; }
+  .remembered-chip, .checkout-who, .keep-open{ border-radius:20px; }
+  .stepper .val{ border-radius:999px; }
+  .sheet{ border-radius:30px 30px 0 0; }
   header .mark{ background-image:var(--grad-text); }
 </style>
 </head>
@@ -400,7 +413,7 @@
   }
   // 完了時にアイコンのまわりへ弾ける小さな粒（色はグラデーションに合わせる）
   function burstHtml(){
-    var colors = ["#6fe0a4", "#57ddc0", "#7fb8f2", "#f4c06c"], out = "";
+    var colors = ["#74d2ff", "#47a9f4", "#9ad7ff", "#8fa8ff"], out = "";
     for(var i = 0; i < 12; i++){
       out += '<i style="--a:' + (i * 30) + 'deg;--c:' + colors[i % colors.length] + '"></i>';
     }
