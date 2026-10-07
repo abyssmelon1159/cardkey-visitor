@@ -148,6 +148,20 @@
   .btn:disabled{ opacity:.4; cursor:not-allowed; }
   .btn.sm{ padding:8px 12px; font-size:13px; border-radius:8px; min-height:36px; }
 
+  /* 立体ボタン：押すとへこむ */
+  .btn:not(.ghost):not(:disabled){ box-shadow:0 2px 0 var(--border); transition:transform .08s ease, box-shadow .08s ease, filter .15s ease; }
+  .btn.primary:not(:disabled){
+    box-shadow:0 4px 0 rgba(0,0,0,.3), 0 8px 16px rgba(20,40,40,.16), inset 0 1px 0 rgba(255,255,255,.4);
+    box-shadow:0 4px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 8px 16px rgba(20,40,40,.16), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .btn:not(.ghost):not(:disabled):active{ transform:translateY(2px); box-shadow:0 0 0 var(--border); }
+  .btn.primary:not(:disabled):active{ transform:translateY(4px); box-shadow:0 0 0 transparent, 0 1px 3px rgba(0,0,0,.2), inset 0 2px 5px rgba(0,0,0,.28); filter:brightness(.97); }
+  .key-tile{ transition:transform .08s ease, background .15s ease; }
+  .key-tile:not(.occupied):active{ transform:scale(.92); }
+  .tab-btn{ transition:transform .08s ease, background .15s ease; }
+  .tab-btn:active{ transform:scale(.92); }
+  @media (prefers-reduced-motion: reduce){ .btn, .key-tile, .tab-btn{ transition:none; } }
+
   .search{ flex:1; min-width:0; display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0 10px; }
   .search input{ border:none; background:transparent; outline:none; color:var(--ink); font-size:14px; padding:9px 0; width:100%; min-width:0; font-family:inherit; }
   .search svg{ flex:none; opacity:.55; }
@@ -173,7 +187,7 @@
 
   .request-card{ display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:14px 0; border-bottom:1px solid var(--border); }
   .request-card:last-child{ border-bottom:none; }
-  .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--grad); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+  .request-ava{ flex:none; width:40px; height:40px; border-radius:999px; background:var(--grad); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; box-shadow:0 2px 0 rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.4); }
   .request-main{ flex:1 1 180px; min-width:0; }
   .request-name{ font-weight:700; font-size:15px; }
   .request-sub{ font-size:13px; color:var(--ink-muted); margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -231,6 +245,12 @@
     max-width:90vw; text-align:center;
   }
   .toast.show{ opacity:1; transform:translate(-50%,-6px); }
+  .toast{ display:flex; align-items:center; gap:8px; justify-content:center; }
+  .toast-check{ width:20px; height:20px; flex:none; }
+  .toast-check circle{ fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:1; stroke-dashoffset:1; animation:toast-draw .35s ease-out forwards; }
+  .toast-check path{ fill:none; stroke:var(--accent); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:1; stroke-dashoffset:1; animation:toast-draw .3s .22s ease-out forwards; }
+  @keyframes toast-draw{ to{ stroke-dashoffset:0; } }
+  @media (prefers-reduced-motion: reduce){ .toast-check circle, .toast-check path{ animation:none; stroke-dashoffset:0; } }
 
   a{ color:var(--accent); }
 
@@ -495,7 +515,12 @@
     });
   }
   function toast(msg){
-    var t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    var t = $("#toast");
+    // 成功メッセージには、描かれるチェックマークを付ける
+    var ok = /しました|登録|完了|保存|返却/.test(msg) && !/失敗|できません|エラー/.test(msg);
+    t.innerHTML = (ok ? '<svg class="toast-check" viewBox="0 0 24 24"><circle pathLength="1" cx="12" cy="12" r="10"/><path pathLength="1" d="M7 12.5l3.2 3.2L17 8.8"/></svg>' : '') + '<span></span>';
+    t.lastChild.textContent = msg;
+    t.classList.add("show");
     clearTimeout(toast._h); toast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
   }
   function todayKey(){ var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
