@@ -95,6 +95,18 @@
     font-size:15.5px; font-weight:700; width:100%;
   }
   .btn.primary{ background:var(--grad); border-color:transparent; color:var(--accent-ink); }
+
+  /* 立体ボタン：押すとへこむ */
+  .btn:not(.ghost):not(:disabled){ box-shadow:0 2px 0 var(--border); transition:transform .08s ease, box-shadow .08s ease, filter .15s ease; }
+  .btn.primary:not(:disabled){
+    box-shadow:0 4px 0 rgba(0,0,0,.3), 0 8px 16px rgba(20,40,40,.16), inset 0 1px 0 rgba(255,255,255,.4);
+    box-shadow:0 4px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 8px 16px rgba(20,40,40,.16), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .btn:not(.ghost):not(:disabled):active{ transform:translateY(2px); box-shadow:0 0 0 var(--border); }
+  .btn.primary:not(:disabled):active{ transform:translateY(4px); box-shadow:0 0 0 transparent, 0 1px 3px rgba(0,0,0,.2), inset 0 2px 5px rgba(0,0,0,.28); filter:brightness(.97); }
+  .stepper button{ box-shadow:0 2px 0 var(--border); transition:transform .08s ease, box-shadow .08s ease; }
+  .stepper button:active{ transform:translateY(2px); box-shadow:0 0 0 var(--border); }
+  @media (prefers-reduced-motion: reduce){ .btn, .stepper button{ transition:none; } }
   .btn.ghost{ background:transparent; border-color:transparent; color:var(--accent); font-weight:600; font-size:13.5px; padding:8px; }
   .btn.ghost.small{ width:auto; padding:7px 11px; font-size:12.5px; flex:none; }
   .btn:disabled{ opacity:.45; cursor:not-allowed; }
@@ -105,7 +117,21 @@
   .done{ text-align:center; padding:20px 6px; }
   .done .icon{ width:56px; height:56px; border-radius:999px; background:var(--good-soft); color:var(--good); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; transition:background .25s,color .25s; }
   .done .icon.pending{ background:var(--surface-2); color:var(--ink-muted); }
-  .done .icon.celebrate{ background:var(--grad); color:var(--accent-ink); }
+  .done .icon.celebrate{
+    background:var(--grad); color:var(--accent-ink);
+    box-shadow:0 5px 0 rgba(0,0,0,.3), 0 10px 22px rgba(20,60,50,.25), inset 0 2px 0 rgba(255,255,255,.45);
+    box-shadow:0 5px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 10px 22px rgba(20,60,50,.25), inset 0 2px 0 rgba(255,255,255,.45);
+  }
+  .done .icon.celebrate svg{ filter:drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+  /* 完了：輪が広がり、紙吹雪が弾け、文字がふわっと現れる */
+  .done .icon.celebrate::after{ content:""; position:absolute; inset:0; border-radius:inherit; border:3px solid var(--accent); opacity:0; animation:done-ring .9s .1s ease-out; }
+  @keyframes done-ring{ 0%{ transform:scale(1); opacity:.75; } 100%{ transform:scale(2.5); opacity:0; } }
+  .burst{ position:absolute; inset:0; pointer-events:none; }
+  .burst i{ position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px; border-radius:50%; background:var(--c); opacity:0; animation:burst .95s .12s cubic-bezier(.1,.7,.3,1) forwards; }
+  .burst i:nth-child(3n){ width:6px; height:6px; margin:-3px; border-radius:2px; }
+  @keyframes burst{ 0%{ opacity:1; transform:rotate(var(--a)) translateY(-24px) scale(.4); } 100%{ opacity:0; transform:rotate(var(--a)) translateY(-66px) scale(1) rotate(160deg); } }
+  .done .icon.celebrate ~ h2, .done .icon.celebrate ~ p{ animation:rise .5s .4s ease-out both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
   .done h2{ font-size:19px; margin:0 0 8px; }
   .keep-open{ background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:13px !important; color:var(--ink) !important; line-height:1.7; text-align:left; }
   .done p{ font-size:14px; color:var(--ink-muted); line-height:1.7; margin:0 0 20px; }
@@ -134,7 +160,8 @@
   @media (prefers-reduced-motion: reduce){
     .step.active-step .dot{ animation:none; }
     .done .icon.pending::before, .done .icon.pending::after{ animation:none; display:none; }
-    .done .icon.celebrate, .done .icon.celebrate path{ animation:none; stroke-dashoffset:0; }
+    .done .icon.celebrate, .done .icon.celebrate path, .done .icon.celebrate::after, .burst i, .done .icon.celebrate ~ h2, .done .icon.celebrate ~ p{ animation:none; stroke-dashoffset:0; }
+    .burst{ display:none; }
   }
 
   .return-box{ margin-top:22px; padding-top:18px; border-top:1px dashed var(--border); display:flex; flex-direction:column; gap:8px; }
@@ -350,12 +377,20 @@
     step.classList.remove("done-step");
     step.classList.add("active-step");
   }
+  // 完了時にアイコンのまわりへ弾ける小さな粒（色はグラデーションに合わせる）
+  function burstHtml(){
+    var colors = ["#6fe0a4", "#57ddc0", "#7fb8f2", "#f4c06c"], out = "";
+    for(var i = 0; i < 12; i++){
+      out += '<i style="--a:' + (i * 30) + 'deg;--c:' + colors[i % colors.length] + '"></i>';
+    }
+    return '<span class="burst" aria-hidden="true">' + out + '</span>';
+  }
   function markHandledUI(){
     $("#keep-open").style.display = "none";
     var icon = $("#done-icon");
     icon.classList.remove("pending");
     icon.classList.remove("celebrate"); void icon.offsetWidth; icon.classList.add("celebrate");
-    icon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path pathLength="1" d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    icon.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path pathLength="1" d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' + burstHtml();
     var step = $("#step-confirmed");
     step.classList.remove("active-step");
     step.classList.add("done-step");
