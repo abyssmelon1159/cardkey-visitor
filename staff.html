@@ -784,7 +784,9 @@
       renderReceptionKeyGrid();
       initCapabilities();
     }catch(e){
-      errEl.textContent = "IDまたはパスワード（C番号）が正しくありません";
+      errEl.textContent = (e && e.message && e.message.indexOf("login_locked") > -1)
+        ? "ログインの失敗が続いたため、一時的にロックされています。10分ほど待ってからもう一度お試しください"
+        : "IDまたはパスワード（C番号）が正しくありません";
       errEl.classList.add("show");
       $("#login-password").value = "";
       $("#login-password").focus();
