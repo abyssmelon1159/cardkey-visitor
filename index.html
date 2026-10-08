@@ -538,7 +538,9 @@
       if(addResult && addResult.id){ startStatusPolling(addResult.id); }
     }catch(e){
       var detail = (e && e.message) ? String(e.message) : "";
-      errEl.textContent = "送信に失敗しました。電波状況をご確認のうえ、もう一度お試しください"
+      errEl.textContent = /rate_limited|too_many_pending/.test(detail)
+        ? "ただいま混み合っています。少し待ってから、もう一度お試しください"
+        : "送信に失敗しました。電波状況をご確認のうえ、もう一度お試しください"
         + (detail ? "（エラー内容: " + detail + "）" : "");
       errEl.classList.add("show");
     }finally{
@@ -592,7 +594,9 @@
       if(res && res.id){ startStatusPolling(res.id); }
     }catch(e){
       var detail = (e && e.message) ? String(e.message) : "";
-      errEl.textContent = "呼び出しに失敗しました。電波状況をご確認のうえ、もう一度お試しください"
+      errEl.textContent = /rate_limited|too_many_pending/.test(detail)
+        ? "ただいま混み合っています。少し待ってから、もう一度お試しください"
+        : "呼び出しに失敗しました。電波状況をご確認のうえ、もう一度お試しください"
         + (detail ? "（エラー内容: " + detail + "）" : "");
       errEl.classList.add("show");
     }finally{
